@@ -1,385 +1,384 @@
-import { useState, useEffect, useRef } from “react”;
+import { useState, useEffect, useRef } from "react";
 
 const theme = {
-bg: “#faf8f5”,
-surface: “#ffffff”,
-card: “#ffffff”,
-border: “#e8e2db”,
-accent: “#b5836a”,
-green: “#7a9e87”,
-coral: “#c0614a”,
-purple: “#8f8aa0”,
-yellow: “#c9a96e”,
-blue: “#7a96a8”,
-orange: “#b5836a”,
-teal: “#6a9e96”,
-text: “#1a1a1a”,
-muted: “#8a8480”,
+ bg: "#faf8f5",
+ surface: "#ffffff",
+ card: "#ffffff",
+ border: "#e8e2db",
+ accent: "#b5836a",
+ green: "#7a9e87",
+ coral: "#c0614a",
+ purple: "#8f8aa0",
+ yellow: "#c9a96e",
+ blue: "#7a96a8",
+ orange: "#b5836a",
+ teal: "#6a9e96",
+ text: "#1a1a1a",
+ muted: "#8a8480",
 };
 
-// Family member colors — mom + up to 6 kids
+// Family member colors -- mom + up to 6 kids
 const MEMBER_COLORS = [
-“#b5836a”, // Mama — terracotta (warm orange-brown)
-“#4a90d9”, // Kid 1 — clear blue
-“#e8734a”, // Kid 2 — bold orange
-“#7b5ea7”, // Kid 3 — purple
-“#2fa87e”, // Kid 4 — emerald green
-“#d4548a”, // Kid 5 — pink-rose
-“#e0a030”, // Kid 6 — amber gold
+  "#b5836a", // Mama -- terracotta (warm orange-brown)
+  "#4a90d9", // Kid 1 -- clear blue
+  "#e8734a", // Kid 2 -- bold orange
+  "#7b5ea7", // Kid 3 -- purple
+  "#2fa87e", // Kid 4 -- emerald green
+  "#d4548a", // Kid 5 -- pink-rose
+  "#e0a030", // Kid 6 -- amber gold
 ];
 
-const EVENT_TYPES = [“Doctor/Medical”,“Dentist”,“Therapy”,“Sports/Activity”,“School”,“Playdate”,“Vaccination”,“Lab/Test”,“Other”];
+const EVENT_TYPES = ["Doctor/Medical","Dentist","Therapy","Sports/Activity","School","Playdate","Vaccination","Lab/Test","Other"];
 
 const initialKids = [
-{ id: 1, name: “Aria”, age: 4, dob: “2020-03-15”, avatar: “”, bloodType: “A+” },
-{ id: 2, name: “Mason”, age: 9, dob: “2015-07-22”, avatar: “”, bloodType: “O+” },
-{ id: 3, name: “Lily”, age: 0, dob: “2025-12-15”, avatar: “”, bloodType: “B+” },
+ { id: 1, name: "Aria", age: 4, dob: "2020-03-15", avatar: "", bloodType: "A+" },
+ { id: 2, name: "Mason", age: 9, dob: "2015-07-22", avatar: "", bloodType: "O+" },
+ { id: 3, name: "Lily", age: 0, dob: "2025-12-15", avatar: "", bloodType: "B+" },
 ];
 
 const initialEvents = [
-{ id: 1, memberId: “mom”, date: “2026-05-20”, time: “10:30”, title: “6-week postpartum checkup”, type: “Doctor/Medical”, notes: “Bring baby”, location: “Dr. Rivera” },
-{ id: 2, memberId: 1, date: “2026-05-15”, time: “09:00”, title: “Pediatrician checkup”, type: “Doctor/Medical”, notes: “”, location: “Dr. Patel” },
-{ id: 3, memberId: 2, date: “2026-05-18”, time: “15:00”, title: “Soccer practice”, type: “Sports/Activity”,notes: “Bring water bottle”, location: “City Park” },
-{ id: 4, memberId: 1, date: “2026-05-22”, time: “10:00”, title: “Preschool show & tell”, type: “School”, notes: “Bring favorite toy”, location: “Sunshine Preschool” },
-{ id: 5, memberId: 2, date: “2026-05-10”, time: “08:30”, title: “Dentist appointment”, type: “Dentist”, notes: “”, location: “Smile Dental” },
-{ id: 6, memberId: “mom”, date: “2026-05-10”, time: “14:00”, title: “Mental health follow-up”, type: “Therapy”, notes: “”, location: “Dr. Kim” },
+ { id: 1, memberId: "mom", date: "2026-05-20", time: "10:30", title: "6-week postpartum checkup", type: "Doctor/Medical", notes: "Bring baby", location: "Dr. Rivera" },
+ { id: 2, memberId: 1, date: "2026-05-15", time: "09:00", title: "Pediatrician checkup", type: "Doctor/Medical", notes: "", location: "Dr. Patel" },
+ { id: 3, memberId: 2, date: "2026-05-18", time: "15:00", title: "Soccer practice", type: "Sports/Activity",notes: "Bring water bottle", location: "City Park" },
+ { id: 4, memberId: 1, date: "2026-05-22", time: "10:00", title: "Preschool show & tell", type: "School", notes: "Bring favorite toy", location: "Sunshine Preschool" },
+ { id: 5, memberId: 2, date: "2026-05-10", time: "08:30", title: "Dentist appointment", type: "Dentist", notes: "", location: "Smile Dental" },
+ { id: 6, memberId: "mom", date: "2026-05-10", time: "14:00", title: "Mental health follow-up", type: "Therapy", notes: "", location: "Dr. Kim" },
 ];
 
-// Full CDC “Learn the Signs. Act Early.” milestone checklist (2022 update)
+// Full CDC "Learn the Signs. Act Early." milestone checklist (2022 update)
 // Organized by age group with 4 developmental domains per age
 const milestoneData = {
-“2 Months”: {
-“💛 Social & Emotional”:    [“Calms down when spoken to or picked up”,“Looks at your face”,“Seems happy to see you when you walk up to them”,“Smiles when you talk to or smile at them”],
-“🗣️ Language & Communication”:[“Makes sounds other than crying”,“Reacts to loud sounds”],
-“🧠 Cognitive”:             [“Watches you as you move”,“Looks at a toy for several seconds”],
-“🏃 Physical & Movement”:   [“Holds head up when on tummy”,“Moves both arms and legs”,“Opens hands briefly”],
-},
-“4 Months”: {
-“💛 Social & Emotional”:    [“Smiles on their own to get your attention”,“Chuckles (not yet a full laugh) when you make funny faces or sounds”,“Looks at you, moves, or makes sounds to get or keep your attention”],
-“🗣️ Language & Communication”:[“Makes sounds like ’oooh’ and ’aah’”,“Makes sounds back when you talk to them”,“Turns head toward the sound of your voice”],
-“🧠 Cognitive”:             [“If hungry, shows you they know feeding time is near by acting excited when they see the breast or bottle”,“Looks at their hands with interest”],
-“🏃 Physical & Movement”:   [“Holds head steady without support when you are holding them”,“Holds a toy when you put it in their hand”,“Uses their arm to swing at toys”,“Brings hands to mouth”,“Pushes up on elbows/forearms when on tummy”],
-},
-“6 Months”: {
-“💛 Social & Emotional”:    [“Knows familiar people”,“Likes to look at themselves in a mirror”,“Laughs”],
-“🗣️ Language & Communication”:[“Takes turns making sounds with you”,“Blows raspberries (sticks tongue out and blows)”,“Makes squealing noises”],
-“🧠 Cognitive”:             [“Puts things in their mouth to explore them”,“Reaches to grab a toy they want”,“Closes lips to show they don’t want more food”],
-“🏃 Physical & Movement”:   [“Rolls from tummy to back”,“Pushes up with straight arms when on tummy”,“Leans on hands to support themselves when sitting”],
-},
-“9 Months”: {
-“💛 Social & Emotional”:    [“Is shy, clingy, or fearful around strangers”,“Shows several facial expressions like happy, sad, angry, and surprised”,“Looks when you call their name”,“Reacts when you leave (looks, reaches for you, or cries)”,“Smiles or laughs when you play peek-a-boo”],
-“🗣️ Language & Communication”:[“Makes a lot of different sounds like ’mamamama’ and ’babababa’”,“Lifts arms up to be picked up”],
-“🧠 Cognitive”:             [“Looks for objects when dropped out of sight”,“Bangs two things together”],
-“🏃 Physical & Movement”:   [“Gets to a sitting position by themselves”,“Moves things from one hand to the other”,“Uses fingers to rake food toward themselves”,“Sits without support”],
-},
-“12 Months”: {
-“💛 Social & Emotional”:    [“Plays games with you like pat-a-cake”,“Waves bye-bye”],
-“🗣️ Language & Communication”:[“Calls a parent ’mama’ or ’dada’ or another special name”,“Understands ’no’ (pauses briefly or stops when you say it)”],
-“🧠 Cognitive”:             [“Puts something into a container, like a block in a cup”,“Looks for things they see you hide, like a toy under a blanket”],
-“🏃 Physical & Movement”:   [“Pulls up to stand”,“Walks, holding on to furniture”,“Drinks from a cup without a lid, as you hold it”,“Picks up things between their thumb and pointer finger”],
-},
-“15 Months”: {
-“💛 Social & Emotional”:    [“Copies other children while playing, like taking toys out of a container when another child does”,“Shows you an object they like”,“Claps when excited”,“Hugs stuffed doll or other toy”,“Shows you affection (hugs, cuddles, or kisses you)”],
-“🗣️ Language & Communication”:[“Tries to say one or two words besides ’mama’ or ’dada’”,“Looks at a familiar object when you name it”,“Follows directions given with both a gesture and words”],
-“🧠 Cognitive”:             [“Tries to use things the right way, like a phone, cup, or book”,“Stacks two small objects, like blocks”],
-“🏃 Physical & Movement”:   [“Takes a few steps on their own”,“Uses fingers to feed themselves some food”],
-},
-“18 Months”: {
-“💛 Social & Emotional”:    [“Moves away from you, but looks to make sure you are close by”,“Points to show you something interesting”,“Puts hands out for you to wash them”,“Looks at a few pages in a book with you”,“Helps you dress them by pushing arm through sleeve or lifting foot”],
-“🗣️ Language & Communication”:[“Tries to say three or more words besides ’mama’ or ’dada’”,“Follows one-step directions without gestures, like ’give it to me’”],
-“🧠 Cognitive”:             [“Copies you doing chores, like sweeping with a broom”,“Plays with toys in a simple way, like pushing a toy car”],
-“🏃 Physical & Movement”:   [“Walks without holding on to anyone or anything”,“Scribbles”,“Drinks from a cup without a lid — may spill sometimes”,“Feeds themselves with fingers”,“Tries to use a spoon”,“Climbs on and off a couch or chair without help”],
-},
-“2 Years”: {
-“💛 Social & Emotional”:    [“Notices when others are hurt or upset, like pausing or looking sad when someone is crying”,“Looks at your face to see how to react in a new situation”],
-“🗣️ Language & Communication”:[“Points to things in a book when you ask, like ’where is the bear?’”,“Says at least two words together, like ’more milk’”,“Points to at least two body parts when asked”,“Uses more gestures than just waving and pointing, like blowing a kiss or nodding yes”],
-“🧠 Cognitive”:             [“Holds something in one hand while using the other hand”,“Tries to use switches, knobs, or buttons on a toy”,“Plays with more than one toy at the same time”],
-“🏃 Physical & Movement”:   [“Kicks a ball”,“Runs”,“Walks (not climbs) up a few stairs with or without help”,“Eats with a spoon”],
-},
-“30 Months”: {
-“💛 Social & Emotional”:    [“Plays next to other children and sometimes plays with them”,“Shows you what they can do by saying ’look at me!’”,“Follows simple routines when told, like helping pick up toys when you say ’it’s clean-up time’”],
-“🗣️ Language & Communication”:[“Says about 50 words”,“Says two or more words together with one action word, like ’doggie run’”,“Names things in a book when you point and ask ’what is this?’”,“Says words like ’I’, ’me’, or ’we’”],
-“🧠 Cognitive”:             [“Uses things to pretend, like feeding a block to a doll as if it were food”,“Shows simple problem-solving, like standing on a stool to reach something”,“Follows two-step instructions like ’put the toy down and close the door’”,“Shows they know at least one color”],
-“🏃 Physical & Movement”:   [“Uses hands to twist things, like turning doorknobs or unscrewing lids”,“Takes some clothes off by themselves, like loose pants”,“Jumps off the ground with both feet”,“Turns book pages one at a time when you read to them”],
-},
-“3 Years”: {
-“💛 Social & Emotional”:    [“Calms down within 10 minutes after you leave, like at daycare drop-off”,“Notices other children and joins them to play”],
-“🗣️ Language & Communication”:[“Talks with you in conversation using at least two back-and-forth exchanges”,“Asks ’who,’ ’what,’ ’where,’ or ’why’ questions”,“Says what action is happening in a picture or book when asked”,“Says first name when asked”,“Talks well enough for others to understand most of the time”],
-“🧠 Cognitive”:             [“Draws a circle when you show them how”,“Avoids touching hot objects like a stove when you warn them”,“Strings items together like large beads or macaroni”],
-“🏃 Physical & Movement”:   [“Puts on some clothes by themselves, like loose pants or a jacket”,“Uses a fork”],
-},
-“4 Years”: {
-“💛 Social & Emotional”:    [“Pretends to be something else during play (teacher, superhero, dog)”,“Asks to go play with children if none are around”,“Comforts others who are hurt or sad”,“Avoids danger, like not jumping from tall heights”,“Likes to be a ’helper’”,“Changes behavior based on where they are (place of worship vs. playground)”],
-“🗣️ Language & Communication”:[“Says sentences with four or more words”,“Says some words from a song, story, or nursery rhyme”,“Talks about at least one thing that happened during their day”,“Answers simple questions like ’What is a coat for?’”],
-“🧠 Cognitive”:             [“Names a few colors of items”,“Tells what comes next in a well-known story”,“Draws a person with three or more body parts”],
-“🏃 Physical & Movement”:   [“Catches a large ball most of the time”,“Serves themselves food or pours water with adult supervision”,“Unbuttons some buttons”,“Holds a crayon or pencil between fingers and thumb (not in a fist)”],
-},
-“5 Years”: {
-“💛 Social & Emotional”:    [“Follows rules or takes turns when playing games with other children”,“Sings, dances, or acts for you”,“Does simple chores at home, like matching socks or clearing the table”],
-“🗣️ Language & Communication”:[“Tells a story they heard or made up with at least two events”,“Answers questions about a book or story after you read or tell it”,“Keeps a conversation going with more than three back-and-forth exchanges”,“Uses or recognizes simple rhymes (bat-cat, ball-tall)”],
-“🧠 Cognitive”:             [“Counts to 10”,“Names some numbers between 1 and 5 when you point to them”,“Uses words about time like ’yesterday,’ ’tomorrow,’ ’morning,’ or ’night’”,“Pays attention for 5 to 10 minutes during activities like story time”],
-“🏃 Physical & Movement”:   [“Writes some letters in their name”,“Names some letters when you point to them”,“Buttons some buttons”,“Hops on one foot”],
-},
+  "2 Months": {
+    "ðŸ’› Social & Emotional":    ["Calms down when spoken to or picked up","Looks at your face","Seems happy to see you when you walk up to them","Smiles when you talk to or smile at them"],
+    "ðŸ—£ï¸ Language & Communication":["Makes sounds other than crying","Reacts to loud sounds"],
+    "ðŸ§  Cognitive":             ["Watches you as you move","Looks at a toy for several seconds"],
+    "ðŸƒ Physical & Movement":   ["Holds head up when on tummy","Moves both arms and legs","Opens hands briefly"],
+  },
+  "4 Months": {
+    "ðŸ’› Social & Emotional":    ["Smiles on their own to get your attention","Chuckles (not yet a full laugh) when you make funny faces or sounds","Looks at you, moves, or makes sounds to get or keep your attention"],
+    "ðŸ—£ï¸ Language & Communication":["Makes sounds like 'oooh' and 'aah'","Makes sounds back when you talk to them","Turns head toward the sound of your voice"],
+    "ðŸ§  Cognitive":             ["If hungry, shows you they know feeding time is near by acting excited when they see the breast or bottle","Looks at their hands with interest"],
+    "ðŸƒ Physical & Movement":   ["Holds head steady without support when you are holding them","Holds a toy when you put it in their hand","Uses their arm to swing at toys","Brings hands to mouth","Pushes up on elbows/forearms when on tummy"],
+  },
+  "6 Months": {
+    "ðŸ’› Social & Emotional":    ["Knows familiar people","Likes to look at themselves in a mirror","Laughs"],
+    "ðŸ—£ï¸ Language & Communication":["Takes turns making sounds with you","Blows raspberries (sticks tongue out and blows)","Makes squealing noises"],
+    "ðŸ§  Cognitive":             ["Puts things in their mouth to explore them","Reaches to grab a toy they want","Closes lips to show they don't want more food"],
+    "ðŸƒ Physical & Movement":   ["Rolls from tummy to back","Pushes up with straight arms when on tummy","Leans on hands to support themselves when sitting"],
+  },
+  "9 Months": {
+    "ðŸ’› Social & Emotional":    ["Is shy, clingy, or fearful around strangers","Shows several facial expressions like happy, sad, angry, and surprised","Looks when you call their name","Reacts when you leave (looks, reaches for you, or cries)","Smiles or laughs when you play peek-a-boo"],
+    "ðŸ—£ï¸ Language & Communication":["Makes a lot of different sounds like 'mamamama' and 'babababa'","Lifts arms up to be picked up"],
+    "ðŸ§  Cognitive":             ["Looks for objects when dropped out of sight","Bangs two things together"],
+    "ðŸƒ Physical & Movement":   ["Gets to a sitting position by themselves","Moves things from one hand to the other","Uses fingers to rake food toward themselves","Sits without support"],
+  },
+  "12 Months": {
+    "ðŸ’› Social & Emotional":    ["Plays games with you like pat-a-cake","Waves bye-bye"],
+    "ðŸ—£ï¸ Language & Communication":["Calls a parent 'mama' or 'dada' or another special name","Understands 'no' (pauses briefly or stops when you say it)"],
+    "ðŸ§  Cognitive":             ["Puts something into a container, like a block in a cup","Looks for things they see you hide, like a toy under a blanket"],
+    "ðŸƒ Physical & Movement":   ["Pulls up to stand","Walks, holding on to furniture","Drinks from a cup without a lid, as you hold it","Picks up things between their thumb and pointer finger"],
+  },
+  "15 Months": {
+    "ðŸ’› Social & Emotional":    ["Copies other children while playing, like taking toys out of a container when another child does","Shows you an object they like","Claps when excited","Hugs stuffed doll or other toy","Shows you affection (hugs, cuddles, or kisses you)"],
+    "ðŸ—£ï¸ Language & Communication":["Tries to say one or two words besides 'mama' or 'dada'","Looks at a familiar object when you name it","Follows directions given with both a gesture and words"],
+    "ðŸ§  Cognitive":             ["Tries to use things the right way, like a phone, cup, or book","Stacks two small objects, like blocks"],
+    "ðŸƒ Physical & Movement":   ["Takes a few steps on their own","Uses fingers to feed themselves some food"],
+  },
+  "18 Months": {
+    "ðŸ’› Social & Emotional":    ["Moves away from you, but looks to make sure you are close by","Points to show you something interesting","Puts hands out for you to wash them","Looks at a few pages in a book with you","Helps you dress them by pushing arm through sleeve or lifting foot"],
+    "ðŸ—£ï¸ Language & Communication":["Tries to say three or more words besides 'mama' or 'dada'","Follows one-step directions without gestures, like 'give it to me'"],
+    "ðŸ§  Cognitive":             ["Copies you doing chores, like sweeping with a broom","Plays with toys in a simple way, like pushing a toy car"],
+    "ðŸƒ Physical & Movement":   ["Walks without holding on to anyone or anything","Scribbles","Drinks from a cup without a lid -- may spill sometimes","Feeds themselves with fingers","Tries to use a spoon","Climbs on and off a couch or chair without help"],
+  },
+  "2 Years": {
+    "ðŸ’› Social & Emotional":    ["Notices when others are hurt or upset, like pausing or looking sad when someone is crying","Looks at your face to see how to react in a new situation"],
+    "ðŸ—£ï¸ Language & Communication":["Points to things in a book when you ask, like 'where is the bear?'","Says at least two words together, like 'more milk'","Points to at least two body parts when asked","Uses more gestures than just waving and pointing, like blowing a kiss or nodding yes"],
+    "ðŸ§  Cognitive":             ["Holds something in one hand while using the other hand","Tries to use switches, knobs, or buttons on a toy","Plays with more than one toy at the same time"],
+    "ðŸƒ Physical & Movement":   ["Kicks a ball","Runs","Walks (not climbs) up a few stairs with or without help","Eats with a spoon"],
+  },
+  "30 Months": {
+    "ðŸ’› Social & Emotional":    ["Plays next to other children and sometimes plays with them","Shows you what they can do by saying 'look at me!'","Follows simple routines when told, like helping pick up toys when you say 'it's clean-up time'"],
+    "ðŸ—£ï¸ Language & Communication":["Says about 50 words","Says two or more words together with one action word, like 'doggie run'","Names things in a book when you point and ask 'what is this?'","Says words like 'I', 'me', or 'we'"],
+    "ðŸ§  Cognitive":             ["Uses things to pretend, like feeding a block to a doll as if it were food","Shows simple problem-solving, like standing on a stool to reach something","Follows two-step instructions like 'put the toy down and close the door'","Shows they know at least one color"],
+    "ðŸƒ Physical & Movement":   ["Uses hands to twist things, like turning doorknobs or unscrewing lids","Takes some clothes off by themselves, like loose pants","Jumps off the ground with both feet","Turns book pages one at a time when you read to them"],
+  },
+  "3 Years": {
+    "ðŸ’› Social & Emotional":    ["Calms down within 10 minutes after you leave, like at daycare drop-off","Notices other children and joins them to play"],
+    "ðŸ—£ï¸ Language & Communication":["Talks with you in conversation using at least two back-and-forth exchanges","Asks 'who,' 'what,' 'where,' or 'why' questions","Says what action is happening in a picture or book when asked","Says first name when asked","Talks well enough for others to understand most of the time"],
+    "ðŸ§  Cognitive":             ["Draws a circle when you show them how","Avoids touching hot objects like a stove when you warn them","Strings items together like large beads or macaroni"],
+    "ðŸƒ Physical & Movement":   ["Puts on some clothes by themselves, like loose pants or a jacket","Uses a fork"],
+  },
+  "4 Years": {
+    "ðŸ’› Social & Emotional":    ["Pretends to be something else during play (teacher, superhero, dog)","Asks to go play with children if none are around","Comforts others who are hurt or sad","Avoids danger, like not jumping from tall heights","Likes to be a 'helper'","Changes behavior based on where they are (place of worship vs. playground)"],
+    "ðŸ—£ï¸ Language & Communication":["Says sentences with four or more words","Says some words from a song, story, or nursery rhyme","Talks about at least one thing that happened during their day","Answers simple questions like 'What is a coat for?'"],
+    "ðŸ§  Cognitive":             ["Names a few colors of items","Tells what comes next in a well-known story","Draws a person with three or more body parts"],
+    "ðŸƒ Physical & Movement":   ["Catches a large ball most of the time","Serves themselves food or pours water with adult supervision","Unbuttons some buttons","Holds a crayon or pencil between fingers and thumb (not in a fist)"],
+  },
+  "5 Years": {
+    "ðŸ’› Social & Emotional":    ["Follows rules or takes turns when playing games with other children","Sings, dances, or acts for you","Does simple chores at home, like matching socks or clearing the table"],
+    "ðŸ—£ï¸ Language & Communication":["Tells a story they heard or made up with at least two events","Answers questions about a book or story after you read or tell it","Keeps a conversation going with more than three back-and-forth exchanges","Uses or recognizes simple rhymes (bat-cat, ball-tall)"],
+    "ðŸ§  Cognitive":             ["Counts to 10","Names some numbers between 1 and 5 when you point to them","Uses words about time like 'yesterday,' 'tomorrow,' 'morning,' or 'night'","Pays attention for 5 to 10 minutes during activities like story time"],
+    "ðŸƒ Physical & Movement":   ["Writes some letters in their name","Names some letters when you point to them","Buttons some buttons","Hops on one foot"],
+  },
 };
 
 const postpartumChecklist = [
-{ category: “Physical Recovery”, items: [“Perineal care / sitz baths daily”,“Monitor lochia (bleeding) — heavy soaking is a red flag”,“Check C-section incision if applicable”,“Breast care — lanolin for soreness, warm compresses for engorgement”,“Kegel exercises starting Day 1”,“Schedule 6-week postpartum OB checkup”] },
-{ category: “Mental Health”, items: [“Baby blues vs PPD — know the difference”,“Talk to someone you trust daily”,“Sleep whenever humanly possible”,“Set boundaries with visitors”,“Reach out to provider if feeling hopeless beyond 2 weeks”] },
-{ category: “Nutrition & Hydration”, items: [“Drink water with every feeding session”,“Eat iron-rich foods (spinach, red meat, lentils)”,“Continue prenatal vitamins”,“Prioritize protein at every meal”,“Limit caffeine to 200mg/day if breastfeeding”] },
-{ category: “Newborn Care Confidence”, items: [“Safe sleep — back, alone, firm flat surface”,“Umbilical cord care — keep stump dry, fold diaper below it, sponge baths only until cord falls off naturally (usually 1–3 weeks). No soaking in water.”,“Hunger cues (rooting, hand-to-mouth, crying is late cue)”,“Normal newborn skin changes (milia, peeling, jaundice)”,“When to call pediatrician (fever > 100.4°F in newborn)”] },
-{ category: “Support & Resources”, items: [“Identify your support person / village”,“Lactation consultant contact saved”,“Pediatrician contact saved”,“OB/Midwife after-hours line saved”,“Local mom group or app community joined”] },
+  { category: "Physical Recovery", items: ["Perineal care / sitz baths daily","Monitor lochia (bleeding) -- heavy soaking is a red flag","Check C-section incision if applicable","Breast care -- lanolin for soreness, warm compresses for engorgement","Kegel exercises starting Day 1","Schedule 6-week postpartum OB checkup"] },
+  { category: "Mental Health", items: ["Baby blues vs PPD -- know the difference","Talk to someone you trust daily","Sleep whenever humanly possible","Set boundaries with visitors","Reach out to provider if feeling hopeless beyond 2 weeks"] },
+  { category: "Nutrition & Hydration", items: ["Drink water with every feeding session","Eat iron-rich foods (spinach, red meat, lentils)","Continue prenatal vitamins","Prioritize protein at every meal","Limit caffeine to 200mg/day if breastfeeding"] },
+  { category: "Newborn Care Confidence", items: ["Safe sleep -- back, alone, firm flat surface","Umbilical cord care -- keep stump dry, fold diaper below it, sponge baths only until cord falls off naturally (usually 1-3 weeks). No soaking in water.","Hunger cues (rooting, hand-to-mouth, crying is late cue)","Normal newborn skin changes (milia, peeling, jaundice)","When to call pediatrician (fever > 100.4 degreesF in newborn)"] },
+  { category: "Support & Resources", items: ["Identify your support person / village","Lactation consultant contact saved","Pediatrician contact saved","OB/Midwife after-hours line saved","Local mom group or app community joined"] },
 ];
 
 const nurseTips = [
-{ icon: “💧”, tip: “Kids need 5–8 cups of water daily depending on age and activity level.” },
-{ icon: “🌡️”, tip: “A fever over 104°F (40°C) in any child warrants immediate medical attention.” },
-{ icon: “😴”, tip: “School-age children need 9–12 hours of sleep for optimal immune function.” },
-{ icon: “🤧”, tip: “Most colds resolve in 7–10 days. See a doctor if symptoms worsen after day 5.” },
-{ icon: “💊”, tip: “Never give aspirin to children under 18 — it can cause Reye’s syndrome.” },
-{ icon: “🏥”, tip: “Keep a list of all medications and dosages ready for every doctor visit.” },
+  { icon: "ðŸ’§", tip: "Kids need 5-8 cups of water daily depending on age and activity level." },
+  { icon: "ðŸŒ¡ï¸", tip: "A fever over 104 degreesF (40 degreesC) in any child warrants immediate medical attention." },
+  { icon: "ðŸ˜´", tip: "School-age children need 9-12 hours of sleep for optimal immune function." },
+  { icon: "ðŸ¤§", tip: "Most colds resolve in 7-10 days. See a doctor if symptoms worsen after day 5." },
+  { icon: "ðŸ’Š", tip: "Never give aspirin to children under 18 -- it can cause Reye's syndrome." },
+  { icon: "ðŸ¥", tip: "Keep a list of all medications and dosages ready for every doctor visit." },
 ];
 
-// Full AAP 2026 Immunization Schedule — birth through 18 years
-// Source: AAP “Recommended Childhood and Adolescent Immunization Schedule: United States, 2026”
+// Full AAP 2026 Immunization Schedule -- birth through 18 years
+// Source: AAP "Recommended Childhood and Adolescent Immunization Schedule: United States, 2026"
 // AAP no longer endorses the 2026 CDC schedule; this follows AAP recommendations
 const vaccineSchedule = [
-// ── AT BIRTH ──────────────────────────────────────────────────────────
-{
-ageGroup: “At Birth”,
-color: theme.accent,
-icon: “👶”,
-items: [
-{ name: “Hepatitis B (HepB) — Dose 1”,  detail: “Administer within 24 hours of birth. Highly effective at preventing perinatal transmission.”, isMed: false },
-{ name: “Vitamin K injection”,            detail: “Given at birth to prevent vitamin K deficiency bleeding (VKDB). Standard newborn care.”, isMed: true  },
-{ name: “Erythromycin eye ointment”,      detail: “Applied to both eyes at birth to prevent neonatal conjunctivitis (ophthalmia neonatorum).”, isMed: true  },
-]
-},
-// ── 1–2 MONTHS ────────────────────────────────────────────────────────
-{
-ageGroup: “1–2 Months”,
-color: theme.orange,
-icon: “🌱”,
-items: [
-{ name: “Hepatitis B (HepB) — Dose 2”, detail: “2nd dose at 1–2 months. Complete series by 6–18 months.”, isMed: false },
-]
-},
-// ── 2 MONTHS ──────────────────────────────────────────────────────────
-{
-ageGroup: “2 Months”,
-color: theme.yellow,
-icon: “🌼”,
-items: [
-{ name: “RSV monoclonal antibody (nirsevimab)”,           detail: “Passive immunization for RSV season. Protects infants from severe RSV — leading cause of infant hospitalization.”, isMed: false },
-{ name: “DTaP — Dose 1”,                                  detail: “Diphtheria, tetanus, acellular pertussis (whooping cough). 5-dose series.”, isMed: false },
-{ name: “Hib (Haemophilus influenzae type b) — Dose 1”,  detail: “Prevents Hib meningitis, pneumonia, and epiglottitis.”, isMed: false },
-{ name: “PCV (Pneumococcal conjugate) — Dose 1”,         detail: “PCV15 or PCV20. Prevents pneumococcal pneumonia, meningitis, and ear infections.”, isMed: false },
-{ name: “IPV (Inactivated Poliovirus) — Dose 1”,         detail: “Protects against polio. 4-dose series.”, isMed: false },
-{ name: “RV (Rotavirus) — Dose 1”, detail: “Oral vaccine. Prevents rotavirus gastroenteritis. 2 or 3 dose series depending on brand.”, isMed: false },
-{ name: “COVID-19 — Dose 1”, detail: “AAP recommends starting COVID-19 vaccine series at 6 months. Discuss timing with your pediatrician.”, isMed: false },
-]
-},
-// 4 MONTHS
-{
-ageGroup: “4 Months”,
-color: theme.green,
-icon: “”,
-items: [
-{ name: “DTaP — Dose 2”, detail: “2nd dose of diphtheria, tetanus, pertussis vaccine.”, isMed: false },
-{ name: “Hib — Dose 2”, detail: “2nd dose of Haemophilus influenzae type b vaccine.”, isMed: false },
-{ name: “PCV — Dose 2”, detail: “2nd dose of pneumococcal conjugate vaccine.”, isMed: false },
-{ name: “IPV — Dose 2”, detail: “2nd dose of inactivated poliovirus vaccine.”, isMed: false },
-{ name: “RV — Dose 2”, detail: “2nd dose of rotavirus vaccine (oral).”, isMed: false },
-{ name: “COVID-19 — Dose 2”, detail: “2nd dose of COVID-19 vaccine series (4 weeks after dose 1).”, isMed: false },
-]
-},
-// 6 MONTHS
-{
-ageGroup: “6 Months”,
-color: theme.teal,
-icon: “”,
-items: [
-{ name: “Hepatitis B (HepB) — Dose 3”, detail: “Final dose of hepatitis B series. Complete by 18 months.”, isMed: false },
-{ name: “DTaP — Dose 3”, detail: “3rd dose of DTaP series.”, isMed: false },
-{ name: “Hib — Dose 3”, detail: “3rd dose (if using 3-dose brand).”, isMed: false },
-{ name: “PCV — Dose 3”, detail: “3rd dose of pneumococcal conjugate vaccine.”, isMed: false },
-{ name: “IPV — Dose 3”, detail: “3rd dose of inactivated poliovirus vaccine.”, isMed: false },
-{ name: “RV — Dose 3”, detail: “3rd dose (RV5 brand only — 3-dose series).”, isMed: false },
-{ name: “Influenza (Flu) — Annual”, detail: “Annual flu vaccine begins at 6 months. Children under 9 receiving flu vaccine for the first time need 2 doses.”, isMed: false },
-{ name: “COVID-19 — Dose 3 or booster”, detail: “Complete primary series and begin annual boosters per current AAP guidance.”, isMed: false },
-]
-},
-// 12–15 MONTHS
-{
-ageGroup: “12–15 Months”,
-color: theme.blue,
-icon: “”,
-items: [
-{ name: “MMR — Dose 1”, detail: “Measles, mumps, and rubella. 2-dose series. First dose at 12–15 months.”, isMed: false },
-{ name: “Varicella (VAR) — Dose 1”, detail: “Chickenpox vaccine. 2-dose series. May use MMRV combination.”, isMed: false },
-{ name: “Hib — Dose 3 or 4 (final)”, detail: “Final dose of Hib series, depending on brand used.”, isMed: false },
-{ name: “PCV — Dose 4”, detail: “Final dose of pneumococcal conjugate vaccine.”, isMed: false },
-{ name: “Hepatitis A (HepA) — Dose 1”, detail: “AAP recommends HepA starting at 12–23 months. 2-dose series.”, isMed: false },
-]
-},
-// 15–18 MONTHS
-{
-ageGroup: “15–18 Months”,
-color: theme.purple,
-icon: “”,
-items: [
-{ name: “DTaP — Dose 4”, detail: “4th dose of DTaP, given 6 months after dose 3.”, isMed: false },
-{ name: “Hepatitis A (HepA) — Dose 2”, detail: “2nd and final dose of HepA, 6–18 months after dose 1.”, isMed: false },
-]
-},
-// 4–6 YEARS
-{
-ageGroup: “4–6 Years”,
-color: theme.coral,
-icon: “”,
-items: [
-{ name: “DTaP — Dose 5”, detail: “Final dose of DTaP series before school entry.”, isMed: false },
-{ name: “IPV — Dose 4”, detail: “Final dose of inactivated poliovirus vaccine.”, isMed: false },
-{ name: “MMR — Dose 2”, detail: “Final dose of MMR. Provides strong long-term immunity.”, isMed: false },
-{ name: “Varicella (VAR) — Dose 2”, detail: “Final dose of varicella (chickenpox) vaccine.”, isMed: false },
-{ name: “Influenza (Flu) — Annual”, detail: “Continue annual flu vaccination every year.”, isMed: false },
-]
-},
-// 11–12 YEARS
-{
-ageGroup: “11–12 Years”,
-color: theme.accent,
-icon: “”,
-items: [
-{ name: “Tdap”, detail: “Booster for tetanus, diphtheria, and pertussis. Replaces a Td dose.”, isMed: false },
-{ name: “HPV — Dose 1”, detail: “Human papillomavirus vaccine. AAP recommends starting at 9–12 years. 2-dose series if started before 15.”, isMed: false },
-{ name: “MenACWY — Dose 1”, detail: “Meningococcal vaccine protecting against serogroups A, C, W, Y.”, isMed: false },
-{ name: “MenB”, detail: “Meningococcal B vaccine. Discuss timing with pediatrician.”, isMed: false },
-{ name: “Influenza (Flu) — Annual”, detail: “Continue annual flu vaccination.”, isMed: false },
-{ name: “COVID-19 — Annual booster”, detail: “Annual updated COVID-19 booster per AAP guidance.”, isMed: false },
-]
-},
-// 13–18 YEARS
-{
-ageGroup: “13–18 Years”,
-color: theme.green,
-icon: “”,
-items: [
-{ name: “HPV — Dose 2 (or Dose 2 & 3)”, detail: “Complete HPV series. 3 doses needed if series started at 15+.”, isMed: false },
-{ name: “MenACWY — Dose 2”, detail: “Booster dose at 16 years.”, isMed: false },
-{ name: “Influenza (Flu) — Annual”, detail: “Continue annual flu vaccination through adolescence.”, isMed: false },
-{ name: “COVID-19 — Annual booster”, detail: “Annual updated COVID-19 booster.”, isMed: false },
-]
-},
+  // â”€â”€ AT BIRTH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  {
+    ageGroup: "At Birth",
+    color: theme.accent,
+    icon: "ðŸ‘¶",
+    items: [
+      { name: "Hepatitis B (HepB) -- Dose 1",  detail: "Administer within 24 hours of birth. Highly effective at preventing perinatal transmission.", isMed: false },
+      { name: "Vitamin K injection",            detail: "Given at birth to prevent vitamin K deficiency bleeding (VKDB). Standard newborn care.", isMed: true  },
+      { name: "Erythromycin eye ointment",      detail: "Applied to both eyes at birth to prevent neonatal conjunctivitis (ophthalmia neonatorum).", isMed: true  },
+    ]
+  },
+  // â”€â”€ 1-2 MONTHS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  {
+    ageGroup: "1-2 Months",
+    color: theme.orange,
+    icon: "ðŸŒ±",
+    items: [
+      { name: "Hepatitis B (HepB) -- Dose 2", detail: "2nd dose at 1-2 months. Complete series by 6-18 months.", isMed: false },
+    ]
+  },
+  // â”€â”€ 2 MONTHS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  {
+    ageGroup: "2 Months",
+    color: theme.yellow,
+    icon: "ðŸŒ¼",
+    items: [
+      { name: "RSV monoclonal antibody (nirsevimab)",           detail: "Passive immunization for RSV season. Protects infants from severe RSV -- leading cause of infant hospitalization.", isMed: false },
+      { name: "DTaP -- Dose 1",                                  detail: "Diphtheria, tetanus, acellular pertussis (whooping cough). 5-dose series.", isMed: false },
+      { name: "Hib (Haemophilus influenzae type b) -- Dose 1",  detail: "Prevents Hib meningitis, pneumonia, and epiglottitis.", isMed: false },
+      { name: "PCV (Pneumococcal conjugate) -- Dose 1",         detail: "PCV15 or PCV20. Prevents pneumococcal pneumonia, meningitis, and ear infections.", isMed: false },
+      { name: "IPV (Inactivated Poliovirus) -- Dose 1",         detail: "Protects against polio. 4-dose series.", isMed: false },
+ { name: "RV (Rotavirus) -- Dose 1", detail: "Oral vaccine. Prevents rotavirus gastroenteritis. 2 or 3 dose series depending on brand.", isMed: false },
+ { name: "COVID-19 -- Dose 1", detail: "AAP recommends starting COVID-19 vaccine series at 6 months. Discuss timing with your pediatrician.", isMed: false },
+ ]
+ },
+ // 4 MONTHS 
+ {
+ ageGroup: "4 Months",
+ color: theme.green,
+ icon: "",
+ items: [
+ { name: "DTaP -- Dose 2", detail: "2nd dose of diphtheria, tetanus, pertussis vaccine.", isMed: false },
+ { name: "Hib -- Dose 2", detail: "2nd dose of Haemophilus influenzae type b vaccine.", isMed: false },
+ { name: "PCV -- Dose 2", detail: "2nd dose of pneumococcal conjugate vaccine.", isMed: false },
+ { name: "IPV -- Dose 2", detail: "2nd dose of inactivated poliovirus vaccine.", isMed: false },
+ { name: "RV -- Dose 2", detail: "2nd dose of rotavirus vaccine (oral).", isMed: false },
+ { name: "COVID-19 -- Dose 2", detail: "2nd dose of COVID-19 vaccine series (4 weeks after dose 1).", isMed: false },
+ ]
+ },
+ // 6 MONTHS 
+ {
+ ageGroup: "6 Months",
+ color: theme.teal,
+ icon: "",
+ items: [
+ { name: "Hepatitis B (HepB) -- Dose 3", detail: "Final dose of hepatitis B series. Complete by 18 months.", isMed: false },
+ { name: "DTaP -- Dose 3", detail: "3rd dose of DTaP series.", isMed: false },
+ { name: "Hib -- Dose 3", detail: "3rd dose (if using 3-dose brand).", isMed: false },
+ { name: "PCV -- Dose 3", detail: "3rd dose of pneumococcal conjugate vaccine.", isMed: false },
+ { name: "IPV -- Dose 3", detail: "3rd dose of inactivated poliovirus vaccine.", isMed: false },
+ { name: "RV -- Dose 3", detail: "3rd dose (RV5 brand only -- 3-dose series).", isMed: false },
+ { name: "Influenza (Flu) -- Annual", detail: "Annual flu vaccine begins at 6 months. Children under 9 receiving flu vaccine for the first time need 2 doses.", isMed: false },
+ { name: "COVID-19 -- Dose 3 or booster", detail: "Complete primary series and begin annual boosters per current AAP guidance.", isMed: false },
+ ]
+ },
+ // 12-15 MONTHS 
+ {
+ ageGroup: "12-15 Months",
+ color: theme.blue,
+ icon: "",
+ items: [
+ { name: "MMR -- Dose 1", detail: "Measles, mumps, and rubella. 2-dose series. First dose at 12-15 months.", isMed: false },
+ { name: "Varicella (VAR) -- Dose 1", detail: "Chickenpox vaccine. 2-dose series. May use MMRV combination.", isMed: false },
+ { name: "Hib -- Dose 3 or 4 (final)", detail: "Final dose of Hib series, depending on brand used.", isMed: false },
+ { name: "PCV -- Dose 4", detail: "Final dose of pneumococcal conjugate vaccine.", isMed: false },
+ { name: "Hepatitis A (HepA) -- Dose 1", detail: "AAP recommends HepA starting at 12-23 months. 2-dose series.", isMed: false },
+ ]
+ },
+ // 15-18 MONTHS 
+ {
+ ageGroup: "15-18 Months",
+ color: theme.purple,
+ icon: "",
+ items: [
+ { name: "DTaP -- Dose 4", detail: "4th dose of DTaP, given 6 months after dose 3.", isMed: false },
+ { name: "Hepatitis A (HepA) -- Dose 2", detail: "2nd and final dose of HepA, 6-18 months after dose 1.", isMed: false },
+ ]
+ },
+ // 4-6 YEARS 
+ {
+ ageGroup: "4-6 Years",
+ color: theme.coral,
+ icon: "",
+ items: [
+ { name: "DTaP -- Dose 5", detail: "Final dose of DTaP series before school entry.", isMed: false },
+ { name: "IPV -- Dose 4", detail: "Final dose of inactivated poliovirus vaccine.", isMed: false },
+ { name: "MMR -- Dose 2", detail: "Final dose of MMR. Provides strong long-term immunity.", isMed: false },
+ { name: "Varicella (VAR) -- Dose 2", detail: "Final dose of varicella (chickenpox) vaccine.", isMed: false },
+ { name: "Influenza (Flu) -- Annual", detail: "Continue annual flu vaccination every year.", isMed: false },
+ ]
+ },
+ // 11-12 YEARS 
+ {
+ ageGroup: "11-12 Years",
+ color: theme.accent,
+ icon: "",
+ items: [
+ { name: "Tdap", detail: "Booster for tetanus, diphtheria, and pertussis. Replaces a Td dose.", isMed: false },
+ { name: "HPV -- Dose 1", detail: "Human papillomavirus vaccine. AAP recommends starting at 9-12 years. 2-dose series if started before 15.", isMed: false },
+ { name: "MenACWY -- Dose 1", detail: "Meningococcal vaccine protecting against serogroups A, C, W, Y.", isMed: false },
+ { name: "MenB", detail: "Meningococcal B vaccine. Discuss timing with pediatrician.", isMed: false },
+ { name: "Influenza (Flu) -- Annual", detail: "Continue annual flu vaccination.", isMed: false },
+ { name: "COVID-19 -- Annual booster", detail: "Annual updated COVID-19 booster per AAP guidance.", isMed: false },
+ ]
+ },
+ // 13-18 YEARS 
+ {
+ ageGroup: "13-18 Years",
+ color: theme.green,
+ icon: "",
+ items: [
+ { name: "HPV -- Dose 2 (or Dose 2 & 3)", detail: "Complete HPV series. 3 doses needed if series started at 15+.", isMed: false },
+ { name: "MenACWY -- Dose 2", detail: "Booster dose at 16 years.", isMed: false },
+ { name: "Influenza (Flu) -- Annual", detail: "Continue annual flu vaccination through adolescence.", isMed: false },
+ { name: "COVID-19 -- Annual booster", detail: "Annual updated COVID-19 booster.", isMed: false },
+ ]
+ },
 ];
 
 const momHealthTips = [
-{ icon: “”, tip: “Postpartum depression affects 1 in 7 moms. Feeling overwhelmed is not weakness — reach out to your provider.” },
-{ icon: “”, tip: “Breastfeeding moms need an extra 16 oz of water daily. Aim for at least 13 cups total per day.” },
-{ icon: “”, tip: “Sleep deprivation affects hormone regulation, mood, and immunity. Sleep when baby sleeps whenever possible.” },
-{ icon: “”, tip: “Postpartum nutrition matters. Focus on iron-rich foods, calcium, and omega-3s to support recovery and milk supply.” },
-{ icon: “”, tip: “Even 10 minutes of gentle movement daily can significantly improve postpartum mood and energy levels.” },
-{ icon: “”, tip: “Don’t skip your 6-week postpartum checkup — it’s your time to discuss recovery, mental health, and contraception.” },
+  { icon: "", tip: "Postpartum depression affects 1 in 7 moms. Feeling overwhelmed is not weakness -- reach out to your provider." },
+  { icon: "", tip: "Breastfeeding moms need an extra 16 oz of water daily. Aim for at least 13 cups total per day." },
+  { icon: "", tip: "Sleep deprivation affects hormone regulation, mood, and immunity. Sleep when baby sleeps whenever possible." },
+  { icon: "", tip: "Postpartum nutrition matters. Focus on iron-rich foods, calcium, and omega-3s to support recovery and milk supply." },
+  { icon: "", tip: "Even 10 minutes of gentle movement daily can significantly improve postpartum mood and energy levels." },
+  { icon: "", tip: "Don't skip your 6-week postpartum checkup -- it's your time to discuss recovery, mental health, and contraception." },
 ];
 
 const typeIcon = (t) => {
-if (t === “Doctor/Medical”) return “”;
-if (t === “Dentist”) return “”;
-if (t === “Therapy”) return “”;
-if (t === “Sports/Activity”) return “”;
-if (t === “School”) return “”;
-if (t === “Playdate”) return “”;
-if (t === “Vaccination”) return “”;
-if (t === “Lab/Test”) return “”;
-return “”;
+ if (t === "Doctor/Medical") return "";
+ if (t === "Dentist") return "";
+ if (t === "Therapy") return "";
+ if (t === "Sports/Activity") return "";
+ if (t === "School") return "";
+ if (t === "Playdate") return "";
+ if (t === "Vaccination") return "";
+ if (t === "Lab/Test") return "";
+ return "";
 };
 
-const DAYS = [“Sun”,“Mon”,“Tue”,“Wed”,“Thu”,“Fri”,“Sat”];
-const MONTHS = [“January”,“February”,“March”,“April”,“May”,“June”,“July”,“August”,“September”,“October”,“November”,“December”];
+const DAYS = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-const severityColor = sv => sv === “Mild” ? theme.green : sv === “Moderate” ? theme.yellow : theme.coral;
-const moodColor = m => m === “Great”? theme.green : m === “Good” ? theme.blue : m === “Okay” ? theme.yellow : theme.coral;
-const flowColor = f => f === “Light”? theme.yellow: f === “Medium” ? theme.accent : theme.coral;
+const severityColor = sv => sv === "Mild" ? theme.green : sv === "Moderate" ? theme.yellow : theme.coral;
+const moodColor = m => m === "Great"? theme.green : m === "Good" ? theme.blue : m === "Okay" ? theme.yellow : theme.coral;
+const flowColor = f => f === "Light"? theme.yellow: f === "Medium" ? theme.accent : theme.coral;
 
-// Breastfeeding Side Timer
+// Breastfeeding Side Timer 
 function BreastfeedingTimer({ onSave }) {
-const [leftSecs, setLeftSecs] = useState(0);
-const [rightSecs, setRightSecs] = useState(0);
-const [activeSide, setActiveSide] = useState(null); // “Left” | “Right” | null
-const [lastSide, setLastSide] = useState(null);
-const [saved, setSaved] = useState(false);
-const intervalRef = useRef(null);
+ const [leftSecs, setLeftSecs] = useState(0);
+ const [rightSecs, setRightSecs] = useState(0);
+ const [activeSide, setActiveSide] = useState(null); // "Left" | "Right" | null
+ const [lastSide, setLastSide] = useState(null);
+ const [saved, setSaved] = useState(false);
+ const intervalRef = useRef(null);
 
-useEffect(() => {
-if (activeSide) {
-intervalRef.current = setInterval(() => {
-if (activeSide === “Left”) setLeftSecs(s => s + 1);
-if (activeSide === “Right”) setRightSecs(s => s + 1);
-}, 1000);
-} else {
-clearInterval(intervalRef.current);
-}
-return () => clearInterval(intervalRef.current);
-}, [activeSide]);
+ useEffect(() => {
+ if (activeSide) {
+ intervalRef.current = setInterval(() => {
+ if (activeSide === "Left") setLeftSecs(s => s + 1);
+ if (activeSide === "Right") setRightSecs(s => s + 1);
+ }, 1000);
+ } else {
+ clearInterval(intervalRef.current);
+ }
+ return () => clearInterval(intervalRef.current);
+ }, [activeSide]);
 
-const fmt = (secs) => {
-const m = Math.floor(secs / 60);
-const s = secs % 60;
-return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
-};
+ const fmt = (secs) => {
+ const m = Math.floor(secs / 60);
+ const s = secs % 60;
+ return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+ };
 
-const toggleSide = (side) => {
-if (activeSide === side) {
-setActiveSide(null);
-setLastSide(side);
-} else {
-setActiveSide(side);
-setLastSide(side);
-}
-setSaved(false);
-};
+ const toggleSide = (side) => {
+ if (activeSide === side) {
+ setActiveSide(null);
+ setLastSide(side);
+ } else {
+ setActiveSide(side);
+ setLastSide(side);
+ }
+ setSaved(false);
+ };
 
-const reset = () => {
-setActiveSide(null);
-setLeftSecs(0);
-setRightSecs(0);
-setLastSide(null);
-setSaved(false);
-clearInterval(intervalRef.current);
-};
+ const reset = () => {
+ setActiveSide(null);
+ setLeftSecs(0);
+ setRightSecs(0);
+ setLastSide(null);
+ setSaved(false);
+ clearInterval(intervalRef.current);
+ };
 
-const totalSecs = leftSecs + rightSecs;
-const totalMins = Math.round(totalSecs / 60);
+ const totalSecs = leftSecs + rightSecs;
+ const totalMins = Math.round(totalSecs / 60);
 
-const handleSave = () => {
-if (totalSecs === 0) return;
-const now = new Date();
-const date = now.toISOString().split(“T”)[0];
-const time = now.toTimeString().slice(0,5);
-const side = leftSecs > 0 && rightSecs > 0 ? “Both”
-: leftSecs > 0 ? “Left”
-: “Right”;
-onSave({
-date, time,
-type: “Breastfeed”,
-side,
-duration: totalMins,
-leftMins: Math.round(leftSecs/60),
-rightMins: Math.round(rightSecs/60),
-oz: “”,
-formulaBrand: “”,
-notes: `Left: ${fmt(leftSecs)} · Right: ${fmt(rightSecs)}`,
-});
-setSaved(true);
-reset();
-};
+ const handleSave = () => {
+ if (totalSecs === 0) return;
+ const now = new Date();
+ const date = now.toISOString().split("T")[0];
+ const time = now.toTimeString().slice(0,5);
+ const side = leftSecs > 0 && rightSecs > 0 ? "Both"
+ : leftSecs > 0 ? "Left"
+ : "Right";
+ onSave({
+ date, time,
+ type: "Breastfeed",
+ side,
+ duration: totalMins,
+ leftMins: Math.round(leftSecs/60),
+ rightMins: Math.round(rightSecs/60),
+ oz: "",
+ formulaBrand: "",
+ notes: `Left: ${fmt(leftSecs)} . Right: ${fmt(rightSecs)}`,
+ });
+ setSaved(true);
+ reset();
+ };
 
-const th = {
-accent:”#b5836a”, purple:”#8f8aa0”, green:”#7a9e87”, blue:”#7a96a8”,
-muted:”#8a8480”, text:”#1a1a1a”, border:”#e8e2db”, yellow:”#c9a96e”,
-};
+ const th = {
+ accent:"#b5836a", purple:"#8f8aa0", green:"#7a9e87", blue:"#7a96a8",
+ muted:"#8a8480", text:"#1a1a1a", border:"#e8e2db", yellow:"#c9a96e",
+ };
 
-return (
-
+ return (
  <div style={{ background:"linear-gradient(135deg,#faf8f5,#f5f0ea)", border:`1px solid ${th.accent}44`, borderRadius:8, padding:20, marginBottom:20 }}>
  <div style={{ fontWeight:500, fontSize:16, marginBottom:4 }}>Breastfeeding Timer</div>
  <div style={{ fontSize:12, color:th.muted, marginBottom:16 }}>
@@ -387,8 +386,7 @@ return (
  {lastSide && !activeSide && <span style={{ color:th.accent, fontWeight:500 }}> Last side: {lastSide}</span>}
  </div>
 
-{/* Side buttons */}
-
+ {/* Side buttons */}
  <div style={{ display:"flex", gap:12, marginBottom:16 }}>
  {["Left","Right"].map(side => {
  const secs = side === "Left" ? leftSecs : rightSecs;
@@ -425,9 +423,8 @@ return (
  })}
  </div>
 
-{/* Total + progress */}
-{totalSecs > 0 && (
-
+ {/* Total + progress */}
+ {totalSecs > 0 && (
  <div style={{ marginBottom:14 }}>
  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
  <div style={{ fontSize:13, color:th.muted }}>Total time</div>
@@ -449,16 +446,14 @@ return (
  </div>
  )}
 
-{/* Nurse tip: which side next */}
-{lastSide && !activeSide && totalSecs === 0 && (
-
+ {/* Nurse tip: which side next */}
+ {lastSide && !activeSide && totalSecs === 0 && (
  <div style={{ background:`${th.green}15`, border:`1px solid ${th.green}33`, borderRadius:6, padding:"8px 12px", marginBottom:12, fontSize:12, color:th.text }}>
- <span style={{fontWeight:500}}>Nurse tip:</span> Start your next feeding on the <span style={{fontWeight:500}}>{lastSide === "Left" ? "Right" : "Left"}</span> side — always alternate to ensure both sides are equally stimulated and drained.
+ <span style={{fontWeight:500}}>Nurse tip:</span> Start your next feeding on the <span style={{fontWeight:500}}>{lastSide === "Left" ? "Right" : "Left"}</span> side -- always alternate to ensure both sides are equally stimulated and drained.
  </div>
  )}
 
-{/* Action buttons */}
-
+ {/* Action buttons */}
  <div style={{ display:"flex", gap:10 }}>
  {totalSecs > 0 && (
  <button
@@ -476,8 +471,7 @@ return (
  )}
  </div>
 
-{saved && (
-
+ {saved && (
  <div style={{ marginTop:10, textAlign:"center", fontWeight:500, color:th.green, fontSize:14 }}>
  Session saved!
  </div>
@@ -486,208 +480,208 @@ return (
  );
 }
 
-// Full Sleep Program
-// Full Sleep Program
+// Full Sleep Program 
+// Full Sleep Program 
 const SLEEP_PROGRAM = {
-“0-3m”: {
-label:“Newborn (0-3 months)”, total:“14-17 hrs”, night:“8-9 hrs”, naps:“4-5 naps/day”, napDur:“30-120 min”,
-about:“Newborns have no established circadian rhythm yet. Sleep is driven entirely by hunger, typically every 2-3 hours. This stage is about survival, not schedules. Your only job is to respond to your baby and rest when you can.”,
-schedule:[
-{time:“7:00 AM”, label:“Wake and feed”},
-{time:“8:30 AM”, label:“Nap 1 (45-90 min)”},
-{time:“10:30 AM”, label:“Wake and feed”},
-{time:“12:00 PM”, label:“Nap 2 (45-90 min)”},
-{time:“2:00 PM”, label:“Wake and feed”},
-{time:“3:30 PM”, label:“Nap 3 (30-60 min)”},
-{time:“5:00 PM”, label:“Wake and feed”},
-{time:“6:00 PM”, label:“Nap 4 - catnap (30-45 min)”},
-{time:“7:00 PM”, label:“Wake and feed”},
-{time:“8:00 PM”, label:“Bedtime feed and settle”},
-],
-nurseNote:“There is no sleep training at this age. Newborns cannot self-soothe — their nervous systems are not developed enough. Responding to your baby is not creating bad habits. It is building secure attachment.”,
-methods:null,
-weeklyPlan:[
-{week:“Weeks 1-2”, focus:“Survival mode”, desc:“Feed on demand, skin-to-skin as much as possible. Sleep wherever baby sleeps safely. Do not attempt any schedule.”},
-{week:“Weeks 3-4”, focus:“Gentle rhythm”, desc:“Begin distinguishing day and night. Keep daytime feeds in bright light with noise. Nighttime feeds quiet, dark, and boring.”},
-{week:“Weeks 5-6”, focus:“Awake windows”, desc:“Watch for sleepy cues at 45-60 minute awake windows. Overtiredness makes sleep worse. Put baby down before they get fussy.”},
-{week:“Weeks 7-8”, focus:“Bedtime routine”, desc:“Introduce a simple 3-step routine — feed, swaddle, white noise. Consistency signals sleep is coming even at this age.”},
-{week:“Weeks 9-12”, focus:“Longer nights”, desc:“Many babies consolidate their longest sleep stretch at night. Keep nights dark and quiet. Some babies sleep 4-6 hour stretches by 12 weeks.”},
-]
-},
-“4-6m”: {
-label:“Infant (4-6 months)”, total:“12-16 hrs”, night:“10-12 hrs”, naps:“3 naps/day”, napDur:“45-90 min”,
-about:“This is the sweet spot for beginning gentle sleep training. Circadian rhythms are maturing, babies can start learning to fall asleep independently, and longer nights are biologically possible. Many sleep regressions occur at 4 months due to a shift in sleep cycles.”,
-schedule:[
-{time:“7:00 AM”, label:“Wake and feed”},
-{time:“9:00 AM”, label:“Nap 1 (45-75 min)”},
-{time:“11:00 AM”, label:“Wake and feed”},
-{time:“1:00 PM”, label:“Nap 2 (60-90 min)”},
-{time:“3:00 PM”, label:“Wake and feed”},
-{time:“4:30 PM”, label:“Nap 3 - catnap (30-45 min)”},
-{time:“5:15 PM”, label:“Wake and feed”},
-{time:“6:30 PM”, label:“Bedtime routine begins”},
-{time:“7:00 PM”, label:“Bedtime”},
-],
-nurseNote:“The 4-month sleep regression is real and driven by neurological development. Sleep cycles mature to match adult patterns — meaning baby wakes briefly between cycles and must learn to connect them independently.”,
-methods:[“gentle”,“ferber”,“chair”],
-weeklyPlan:[
-{week:“Week 1”, focus:“Establish bedtime routine”, desc:“Pick a consistent 20-30 minute routine: bath, feed, book, song, bed. Same order every night. Aim for 7:00-7:30 PM bedtime.”},
-{week:“Week 2”, focus:“Drowsy but awake”, desc:“Begin putting baby down drowsy but not fully asleep. This teaches them to fall asleep in their sleep environment — the key to independent sleep.”},
-{week:“Week 3”, focus:“Begin chosen method”, desc:“Start your chosen sleep training method consistently. The first 3 nights are hardest. Inconsistency makes it take longer.”},
-{week:“Week 4”, focus:“Nap training”, desc:“Once nights improve, apply the same method to naps. Naps take longer to consolidate than nights — be patient.”},
-{week:“Weeks 5-6”, focus:“Consolidation”, desc:“Most babies show significant improvement by now. If not, check wake windows, feeding schedule, and room environment.”},
-]
-},
-“7-12m”: {
-label:“Infant (7-12 months)”, total:“12-16 hrs”, night:“10-12 hrs”, naps:“2 naps/day”, napDur:“60-90 min”,
-about:“Two solid naps anchor the day. Most babies this age are capable of sleeping 10-12 hours at night without feeding. Separation anxiety peaks around 8-10 months and can temporarily disrupt sleep even in well-established sleepers.”,
-schedule:[
-{time:“7:00 AM”, label:“Wake and feed”},
-{time:“9:00 AM”, label:“Nap 1 (60-90 min)”},
-{time:“10:30 AM”, label:“Wake and feed”},
-{time:“1:00 PM”, label:“Nap 2 (60-90 min)”},
-{time:“3:00 PM”, label:“Wake and feed”},
-{time:“5:00 PM”, label:“Dinner”},
-{time:“6:30 PM”, label:“Bedtime routine begins”},
-{time:“7:00 PM”, label:“Bedtime”},
-],
-nurseNote:“Separation anxiety is developmentally normal and does not mean sleep training has failed. Brief check-ins and a consistent routine help baby feel secure even when you are not in the room.”,
-methods:[“gentle”,“ferber”,“chair”],
-weeklyPlan:[
-{week:“Week 1”, focus:“Audit the schedule”, desc:“Ensure awake windows are 2.5-3.5 hours. An undertired or overtired baby will fight sleep. Adjust nap timing before attempting any training.”},
-{week:“Week 2”, focus:“Strengthen routine”, desc:“A predictable 20-minute routine is your greatest tool. Bath, massage, feed, book, song, bed — same order every night.”},
-{week:“Week 3”, focus:“Night weaning if ready”, desc:“Most babies 7 months and older do not need night feeds nutritionally. If your pediatrician agrees, begin gradually reducing night feeds.”},
-{week:“Week 4”, focus:“Nap transitions”, desc:“Some babies begin dropping to one nap between 10-12 months. Signs: consistently fighting one nap, taking a long time to fall asleep.”},
-{week:“Weeks 5-6”, focus:“Maintenance”, desc:“Illness, travel, and developmental leaps will cause temporary disruptions — return to your routine as quickly as possible.”},
-]
-},
-“13-36m”: {
-label:“Toddler (1-3 years)”, total:“11-14 hrs”, night:“10-12 hrs”, naps:“1 nap/day”, napDur:“60-120 min”,
-about:“One solid afternoon nap supports nighttime sleep. Toddlers are capable of understanding simple rules and expectations about sleep. Boundaries, consistency, and a calm predictable routine are your most powerful tools.”,
-schedule:[
-{time:“7:00 AM”, label:“Wake”},
-{time:“8:00 AM”, label:“Breakfast”},
-{time:“12:30 PM”, label:“Lunch”},
-{time:“1:00 PM”, label:“Nap (60-120 min)”},
-{time:“3:00 PM”, label:“Wake from nap”},
-{time:“5:30 PM”, label:“Dinner”},
-{time:“6:30 PM”, label:“Bedtime routine begins”},
-{time:“7:00 PM”, label:“Bedtime”},
-],
-nurseNote:“Toddlers test boundaries — including at bedtime. This is developmentally normal. Clear, calm, consistent responses to bedtime protests are more effective than engaging with negotiations.”,
-methods:[“gentle”,“ferber”,“chair”,“toddler”],
-weeklyPlan:[
-{week:“Week 1”, focus:“Set clear expectations”, desc:“Use simple language: After stories, we say goodnight and you stay in your bed. A visual bedtime chart helps toddlers understand the routine.”},
-{week:“Week 2”, focus:“Bedtime pass”, desc:“Give your toddler one physical bedtime pass they can use once for one request. This dramatically reduces curtain calls while giving them autonomy.”},
-{week:“Week 3”, focus:“Night wakings”, desc:“For night wakings, use your chosen method. Brief, boring responses discourage waking. Avoid bringing toddler to your bed unless that is your intention consistently.”},
-{week:“Week 4”, focus:“Nap transition planning”, desc:“If your toddler is 2.5-3 years and fighting naps, begin transitioning to quiet time — 45-60 minutes in their room with books or quiet toys.”},
-{week:“Weeks 5-6”, focus:“Big kid bed transition”, desc:“If moving from crib to bed, do it at a stable time. Keep everything else the same. A toddler clock that shows when it is okay to get up is very effective.”},
-]
-},
+ "0-3m": {
+ label:"Newborn (0-3 months)", total:"14-17 hrs", night:"8-9 hrs", naps:"4-5 naps/day", napDur:"30-120 min",
+ about:"Newborns have no established circadian rhythm yet. Sleep is driven entirely by hunger, typically every 2-3 hours. This stage is about survival, not schedules. Your only job is to respond to your baby and rest when you can.",
+ schedule:[
+ {time:"7:00 AM", label:"Wake and feed"},
+ {time:"8:30 AM", label:"Nap 1 (45-90 min)"},
+ {time:"10:30 AM", label:"Wake and feed"},
+ {time:"12:00 PM", label:"Nap 2 (45-90 min)"},
+ {time:"2:00 PM", label:"Wake and feed"},
+ {time:"3:30 PM", label:"Nap 3 (30-60 min)"},
+ {time:"5:00 PM", label:"Wake and feed"},
+ {time:"6:00 PM", label:"Nap 4 - catnap (30-45 min)"},
+ {time:"7:00 PM", label:"Wake and feed"},
+ {time:"8:00 PM", label:"Bedtime feed and settle"},
+ ],
+ nurseNote:"There is no sleep training at this age. Newborns cannot self-soothe -- their nervous systems are not developed enough. Responding to your baby is not creating bad habits. It is building secure attachment.",
+ methods:null,
+ weeklyPlan:[
+ {week:"Weeks 1-2", focus:"Survival mode", desc:"Feed on demand, skin-to-skin as much as possible. Sleep wherever baby sleeps safely. Do not attempt any schedule."},
+ {week:"Weeks 3-4", focus:"Gentle rhythm", desc:"Begin distinguishing day and night. Keep daytime feeds in bright light with noise. Nighttime feeds quiet, dark, and boring."},
+ {week:"Weeks 5-6", focus:"Awake windows", desc:"Watch for sleepy cues at 45-60 minute awake windows. Overtiredness makes sleep worse. Put baby down before they get fussy."},
+ {week:"Weeks 7-8", focus:"Bedtime routine", desc:"Introduce a simple 3-step routine -- feed, swaddle, white noise. Consistency signals sleep is coming even at this age."},
+ {week:"Weeks 9-12", focus:"Longer nights", desc:"Many babies consolidate their longest sleep stretch at night. Keep nights dark and quiet. Some babies sleep 4-6 hour stretches by 12 weeks."},
+ ]
+ },
+ "4-6m": {
+ label:"Infant (4-6 months)", total:"12-16 hrs", night:"10-12 hrs", naps:"3 naps/day", napDur:"45-90 min",
+ about:"This is the sweet spot for beginning gentle sleep training. Circadian rhythms are maturing, babies can start learning to fall asleep independently, and longer nights are biologically possible. Many sleep regressions occur at 4 months due to a shift in sleep cycles.",
+ schedule:[
+ {time:"7:00 AM", label:"Wake and feed"},
+ {time:"9:00 AM", label:"Nap 1 (45-75 min)"},
+ {time:"11:00 AM", label:"Wake and feed"},
+ {time:"1:00 PM", label:"Nap 2 (60-90 min)"},
+ {time:"3:00 PM", label:"Wake and feed"},
+ {time:"4:30 PM", label:"Nap 3 - catnap (30-45 min)"},
+ {time:"5:15 PM", label:"Wake and feed"},
+ {time:"6:30 PM", label:"Bedtime routine begins"},
+ {time:"7:00 PM", label:"Bedtime"},
+ ],
+ nurseNote:"The 4-month sleep regression is real and driven by neurological development. Sleep cycles mature to match adult patterns -- meaning baby wakes briefly between cycles and must learn to connect them independently.",
+ methods:["gentle","ferber","chair"],
+ weeklyPlan:[
+ {week:"Week 1", focus:"Establish bedtime routine", desc:"Pick a consistent 20-30 minute routine: bath, feed, book, song, bed. Same order every night. Aim for 7:00-7:30 PM bedtime."},
+ {week:"Week 2", focus:"Drowsy but awake", desc:"Begin putting baby down drowsy but not fully asleep. This teaches them to fall asleep in their sleep environment -- the key to independent sleep."},
+ {week:"Week 3", focus:"Begin chosen method", desc:"Start your chosen sleep training method consistently. The first 3 nights are hardest. Inconsistency makes it take longer."},
+ {week:"Week 4", focus:"Nap training", desc:"Once nights improve, apply the same method to naps. Naps take longer to consolidate than nights -- be patient."},
+ {week:"Weeks 5-6", focus:"Consolidation", desc:"Most babies show significant improvement by now. If not, check wake windows, feeding schedule, and room environment."},
+ ]
+ },
+ "7-12m": {
+ label:"Infant (7-12 months)", total:"12-16 hrs", night:"10-12 hrs", naps:"2 naps/day", napDur:"60-90 min",
+ about:"Two solid naps anchor the day. Most babies this age are capable of sleeping 10-12 hours at night without feeding. Separation anxiety peaks around 8-10 months and can temporarily disrupt sleep even in well-established sleepers.",
+ schedule:[
+ {time:"7:00 AM", label:"Wake and feed"},
+ {time:"9:00 AM", label:"Nap 1 (60-90 min)"},
+ {time:"10:30 AM", label:"Wake and feed"},
+ {time:"1:00 PM", label:"Nap 2 (60-90 min)"},
+ {time:"3:00 PM", label:"Wake and feed"},
+ {time:"5:00 PM", label:"Dinner"},
+ {time:"6:30 PM", label:"Bedtime routine begins"},
+ {time:"7:00 PM", label:"Bedtime"},
+ ],
+ nurseNote:"Separation anxiety is developmentally normal and does not mean sleep training has failed. Brief check-ins and a consistent routine help baby feel secure even when you are not in the room.",
+ methods:["gentle","ferber","chair"],
+ weeklyPlan:[
+ {week:"Week 1", focus:"Audit the schedule", desc:"Ensure awake windows are 2.5-3.5 hours. An undertired or overtired baby will fight sleep. Adjust nap timing before attempting any training."},
+ {week:"Week 2", focus:"Strengthen routine", desc:"A predictable 20-minute routine is your greatest tool. Bath, massage, feed, book, song, bed -- same order every night."},
+ {week:"Week 3", focus:"Night weaning if ready", desc:"Most babies 7 months and older do not need night feeds nutritionally. If your pediatrician agrees, begin gradually reducing night feeds."},
+ {week:"Week 4", focus:"Nap transitions", desc:"Some babies begin dropping to one nap between 10-12 months. Signs: consistently fighting one nap, taking a long time to fall asleep."},
+ {week:"Weeks 5-6", focus:"Maintenance", desc:"Illness, travel, and developmental leaps will cause temporary disruptions -- return to your routine as quickly as possible."},
+ ]
+ },
+ "13-36m": {
+ label:"Toddler (1-3 years)", total:"11-14 hrs", night:"10-12 hrs", naps:"1 nap/day", napDur:"60-120 min",
+ about:"One solid afternoon nap supports nighttime sleep. Toddlers are capable of understanding simple rules and expectations about sleep. Boundaries, consistency, and a calm predictable routine are your most powerful tools.",
+ schedule:[
+ {time:"7:00 AM", label:"Wake"},
+ {time:"8:00 AM", label:"Breakfast"},
+ {time:"12:30 PM", label:"Lunch"},
+ {time:"1:00 PM", label:"Nap (60-120 min)"},
+ {time:"3:00 PM", label:"Wake from nap"},
+ {time:"5:30 PM", label:"Dinner"},
+ {time:"6:30 PM", label:"Bedtime routine begins"},
+ {time:"7:00 PM", label:"Bedtime"},
+ ],
+ nurseNote:"Toddlers test boundaries -- including at bedtime. This is developmentally normal. Clear, calm, consistent responses to bedtime protests are more effective than engaging with negotiations.",
+ methods:["gentle","ferber","chair","toddler"],
+ weeklyPlan:[
+ {week:"Week 1", focus:"Set clear expectations", desc:"Use simple language: After stories, we say goodnight and you stay in your bed. A visual bedtime chart helps toddlers understand the routine."},
+ {week:"Week 2", focus:"Bedtime pass", desc:"Give your toddler one physical bedtime pass they can use once for one request. This dramatically reduces curtain calls while giving them autonomy."},
+ {week:"Week 3", focus:"Night wakings", desc:"For night wakings, use your chosen method. Brief, boring responses discourage waking. Avoid bringing toddler to your bed unless that is your intention consistently."},
+ {week:"Week 4", focus:"Nap transition planning", desc:"If your toddler is 2.5-3 years and fighting naps, begin transitioning to quiet time -- 45-60 minutes in their room with books or quiet toys."},
+ {week:"Weeks 5-6", focus:"Big kid bed transition", desc:"If moving from crib to bed, do it at a stable time. Keep everything else the same. A toddler clock that shows when it is okay to get up is very effective."},
+ ]
+ },
 };
 
 const SLEEP_METHODS = {
-gentle: {
-name:“Gentle / No-Cry Method”, color:”#7a9e87”, best:“Babies of all ages, parents who prefer minimal crying”,
-desc:“Focuses on gradually reducing parental presence while providing comfort. Takes longer but involves very little crying. Ideal for sensitive babies and parents who find it difficult to hear crying.”,
-steps:[
-“Establish a consistent calming bedtime routine of 20-30 minutes”,
-“Feed or rock to drowsy but not fully asleep — then transfer to crib”,
-“If baby cries, comfort with voice, hand on chest, or picking up briefly”,
-“Gradually reduce the amount of help you provide each night”,
-“Move toward baby falling asleep with just your voice, then independently”,
-],
-timeline:“2-6 weeks for full results”,
-source:“Based on Dr. Elizabeth Pantley No-Cry Sleep Solution”
-},
-ferber: {
-name:“Ferber / Graduated Extinction”, color:”#7a96a8”, best:“Infants 4+ months, parents who can tolerate short periods of crying”,
-desc:“Also called check and console. You put baby down awake and check in at gradually increasing intervals. Crying decreases significantly within 3-7 nights for most babies.”,
-steps:[
-“Complete bedtime routine and put baby down awake”,
-“Leave the room. If baby cries, wait the prescribed interval before checking”,
-“Day 1: check at 3, 5, 10 minutes — keep increasing the last interval”,
-“Day 2: check at 5, 10, 12 minutes”,
-“Day 3+: increase intervals by 2 minutes each night”,
-“Check-ins are brief — 1-2 minutes, verbal reassurance only, no picking up”,
-],
-timeline:“3-7 nights for most babies”,
-source:“Based on Dr. Richard Ferber Solve Your Child Sleep Problems”
-},
-chair: {
-name:“Sleep Lady Shuffle / Chair Method”, color:”#8f8aa0”, best:“Infants 6+ months, parents who want to stay present”,
-desc:“You sit in a chair next to the crib while baby falls asleep, gradually moving further away every 3 nights until you are out of the room. A middle ground between gentle and Ferber.”,
-steps:[
-“Complete bedtime routine and put baby down awake”,
-“Sit in a chair next to the crib — shush and pat but do not pick up”,
-“Nights 1-3: chair right next to the crib”,
-“Nights 4-6: move chair halfway to the door”,
-“Nights 7-9: move chair to the doorway”,
-“Nights 10-12: move chair just outside the door, out of sight”,
-],
-timeline:“10-14 nights”,
-source:“Based on Kim West The Sleep Lady Good Night Sleep Tight”
-},
-toddler: {
-name:“Toddler Boundary Method”, color:”#c9a96e”, best:“Toddlers 18 months+, particularly strong-willed children”,
-desc:“Uses clear verbal expectations, a visual routine chart, and the bedtime pass system. Combines behavioral psychology with toddler needs for autonomy and predictability.”,
-steps:[
-“Create a simple visual bedtime chart with pictures of each step”,
-“Review the chart together each evening — toddler checks off steps”,
-“Give one physical bedtime pass — they can use it once for one request”,
-“If they leave the room without the pass, calmly and silently return them”,
-“Praise morning success: You stayed in your bed all night!”,
-“Use a toddler OK-to-wake clock to set a clear morning boundary”,
-],
-timeline:“1-3 weeks”,
-source:“Based on Dr. Patrick Friman research on the Bedtime Pass and AAP behavioral sleep guidelines”
-}
+ gentle: {
+ name:"Gentle / No-Cry Method", color:"#7a9e87", best:"Babies of all ages, parents who prefer minimal crying",
+ desc:"Focuses on gradually reducing parental presence while providing comfort. Takes longer but involves very little crying. Ideal for sensitive babies and parents who find it difficult to hear crying.",
+ steps:[
+ "Establish a consistent calming bedtime routine of 20-30 minutes",
+ "Feed or rock to drowsy but not fully asleep -- then transfer to crib",
+ "If baby cries, comfort with voice, hand on chest, or picking up briefly",
+ "Gradually reduce the amount of help you provide each night",
+ "Move toward baby falling asleep with just your voice, then independently",
+ ],
+ timeline:"2-6 weeks for full results",
+ source:"Based on Dr. Elizabeth Pantley No-Cry Sleep Solution"
+ },
+ ferber: {
+ name:"Ferber / Graduated Extinction", color:"#7a96a8", best:"Infants 4+ months, parents who can tolerate short periods of crying",
+ desc:"Also called check and console. You put baby down awake and check in at gradually increasing intervals. Crying decreases significantly within 3-7 nights for most babies.",
+ steps:[
+ "Complete bedtime routine and put baby down awake",
+ "Leave the room. If baby cries, wait the prescribed interval before checking",
+ "Day 1: check at 3, 5, 10 minutes -- keep increasing the last interval",
+ "Day 2: check at 5, 10, 12 minutes",
+ "Day 3+: increase intervals by 2 minutes each night",
+ "Check-ins are brief -- 1-2 minutes, verbal reassurance only, no picking up",
+ ],
+ timeline:"3-7 nights for most babies",
+ source:"Based on Dr. Richard Ferber Solve Your Child Sleep Problems"
+ },
+ chair: {
+ name:"Sleep Lady Shuffle / Chair Method", color:"#8f8aa0", best:"Infants 6+ months, parents who want to stay present",
+ desc:"You sit in a chair next to the crib while baby falls asleep, gradually moving further away every 3 nights until you are out of the room. A middle ground between gentle and Ferber.",
+ steps:[
+ "Complete bedtime routine and put baby down awake",
+ "Sit in a chair next to the crib -- shush and pat but do not pick up",
+ "Nights 1-3: chair right next to the crib",
+ "Nights 4-6: move chair halfway to the door",
+ "Nights 7-9: move chair to the doorway",
+ "Nights 10-12: move chair just outside the door, out of sight",
+ ],
+ timeline:"10-14 nights",
+ source:"Based on Kim West The Sleep Lady Good Night Sleep Tight"
+ },
+ toddler: {
+ name:"Toddler Boundary Method", color:"#c9a96e", best:"Toddlers 18 months+, particularly strong-willed children",
+ desc:"Uses clear verbal expectations, a visual routine chart, and the bedtime pass system. Combines behavioral psychology with toddler needs for autonomy and predictability.",
+ steps:[
+ "Create a simple visual bedtime chart with pictures of each step",
+ "Review the chart together each evening -- toddler checks off steps",
+ "Give one physical bedtime pass -- they can use it once for one request",
+ "If they leave the room without the pass, calmly and silently return them",
+ "Praise morning success: You stayed in your bed all night!",
+ "Use a toddler OK-to-wake clock to set a clear morning boundary",
+ ],
+ timeline:"1-3 weeks",
+ source:"Based on Dr. Patrick Friman research on the Bedtime Pass and AAP behavioral sleep guidelines"
+ }
 };
+
 
 function AISleepPlanner({ kid, sleepLog }) {
-const [activeTab, setActiveTab] = useState(“program”);
-const [method, setMethod] = useState(null);
-const [plan, setPlan] = useState(null);
-const [loading, setLoading] = useState(false);
-const [error, setError] = useState(null);
-const [expanded, setExpanded] = useState(false);
-const [weekOpen, setWeekOpen] = useState(null);
+ const [activeTab, setActiveTab] = useState("program");
+ const [method, setMethod] = useState(null);
+ const [plan, setPlan] = useState(null);
+ const [loading, setLoading] = useState(false);
+ const [error, setError] = useState(null);
+ const [expanded, setExpanded] = useState(false);
+ const [weekOpen, setWeekOpen] = useState(null);
 
-const ageMonths = kid.dob
-? Math.floor((new Date() - new Date(kid.dob)) / (1000*60*60*24*30.44))
-: kid.age * 12;
+ const ageMonths = kid.dob
+ ? Math.floor((new Date() - new Date(kid.dob)) / (1000*60*60*24*30.44))
+ : kid.age * 12;
 
-const ageKey = ageMonths < 4 ? “0-3m” : ageMonths < 7 ? “4-6m” : ageMonths < 13 ? “7-12m” : “13-36m”;
-const prog = SLEEP_PROGRAM[ageKey];
-const recentLogs = sleepLog.slice(-10);
-const hasEnoughData = recentLogs.length >= 3;
+ const ageKey = ageMonths < 4 ? "0-3m" : ageMonths < 7 ? "4-6m" : ageMonths < 13 ? "7-12m" : "13-36m";
+ const prog = SLEEP_PROGRAM[ageKey];
+ const recentLogs = sleepLog.slice(-10);
+ const hasEnoughData = recentLogs.length >= 3;
 
-const th = {
-accent:”#b5836a”, green:”#7a9e87”, purple:”#8f8aa0”, yellow:”#c9a96e”,
-blue:”#7a96a8”, coral:”#c0614a”, muted:”#8a8480”, text:”#1a1a1a”, border:”#e8e2db”
-};
+ const th = {
+ accent:"#b5836a", green:"#7a9e87", purple:"#8f8aa0", yellow:"#c9a96e",
+ blue:"#7a96a8", coral:"#c0614a", muted:"#8a8480", text:"#1a1a1a", border:"#e8e2db"
+ };
 
-const generatePlan = async () => {
-setLoading(true); setError(null); setPlan(null);
-const logs = recentLogs.map(s => s.date + “: “ + s.type + “ (” + s.duration + “ min)”).join(”, “);
-const meth = method ? SLEEP_METHODS[method].name : “None”;
-const prompt = “Pediatric sleep specialist. Child: “ + kid.name + “, “ + ageMonths + “mo. “ + prog.label + “. Total “ + prog.total + “ Night “ + prog.night + “ Naps “ + prog.naps + “. Method: “ + meth + “. Log: “ + (logs || “none”) + “. JSON only: {summary,bedtime,wakeTime,naps:[{label,time,duration}],totalSleep,tips:[],warnings:[],source}”;
-try {
-const res = await fetch(“https://api.anthropic.com/v1/messages”, {
-method:“POST”, headers:{“Content-Type”:“application/json”},
-body:JSON.stringify({model:“claude-sonnet-4-20250514”, max_tokens:1000, messages:[{role:“user”,content:prompt}]})
-});
-const data = await res.json();
-const raw = data.content?.map(b => b.text||””).join(””).replace(/`json|`/g,””).trim();
-setPlan(JSON.parse(raw));
-} catch(e) { setError(“Unable to generate plan. Please try again.”); }
-setLoading(false);
-};
+ const generatePlan = async () => {
+ setLoading(true); setError(null); setPlan(null);
+ const logs = recentLogs.map(s => s.date + ": " + s.type + " (" + s.duration + " min)").join(", ");
+ const meth = method ? SLEEP_METHODS[method].name : "None";
+ const prompt = "Pediatric sleep specialist. Child: " + kid.name + ", " + ageMonths + "mo. " + prog.label + ". Total " + prog.total + " Night " + prog.night + " Naps " + prog.naps + ". Method: " + meth + ". Log: " + (logs || "none") + ". JSON only: {summary,bedtime,wakeTime,naps:[{label,time,duration}],totalSleep,tips:[],warnings:[],source}";
+ try {
+ const res = await fetch("https://api.anthropic.com/v1/messages", {
+ method:"POST", headers:{"Content-Type":"application/json"},
+ body:JSON.stringify({model:"claude-sonnet-4-20250514", max_tokens:1000, messages:[{role:"user",content:prompt}]})
+ });
+ const data = await res.json();
+ const raw = data.content?.map(b => b.text||"").join("").replace(/```json|```/g,"").trim();
+ setPlan(JSON.parse(raw));
+ } catch(e) { setError("Unable to generate plan. Please try again."); }
+ setLoading(false);
+ };
 
-const tabs = [{id:“program”,label:“Sleep Program”},{id:“schedule”,label:“Daily Schedule”},{id:“training”,label:“Sleep Training”},{id:“ai”,label:“AI Planner”}];
+ const tabs = [{id:"program",label:"Sleep Program"},{id:"schedule",label:"Daily Schedule"},{id:"training",label:"Sleep Training"},{id:"ai",label:"AI Planner"}];
 
-return (
-
+ return (
  <div style={{marginBottom:20}}>
  <div style={{marginBottom:16}}>
  <div style={{fontWeight:400,fontSize:28,fontFamily:"'Cormorant Garamond',serif",fontStyle:"italic",marginBottom:4}}>
@@ -706,8 +700,7 @@ return (
  ))}
  </div>
 
-{activeTab === “program” && (
-
+ {activeTab === "program" && (
  <div>
  <div style={{background:"#ffffff",border:"1px solid "+th.border,borderRadius:6,padding:20,marginBottom:12,borderLeft:"3px solid "+th.accent}}>
  <div style={{fontSize:10,color:th.muted,letterSpacing:"0.12em",textTransform:"uppercase",fontFamily:"'Inter',sans-serif",marginBottom:10}}>About This Stage</div>
@@ -742,8 +735,7 @@ return (
  </div>
  )}
 
-{activeTab === “schedule” && (
-
+ {activeTab === "schedule" && (
  <div>
  <div style={{background:"#ffffff",border:"1px solid "+th.border,borderRadius:6,padding:20,marginBottom:12}}>
  <div style={{fontSize:10,color:th.muted,letterSpacing:"0.12em",textTransform:"uppercase",fontFamily:"'Inter',sans-serif",marginBottom:14}}>Sample Daily Schedule &mdash; {prog.label}</div>
@@ -767,8 +759,7 @@ return (
  </div>
  )}
 
-{activeTab === “training” && (
-
+ {activeTab === "training" && (
  <div>
  {ageKey === "0-3m" ? (
  <div style={{background:"#faf8f5",border:"1px solid "+th.border,borderRadius:6,padding:20}}>
@@ -819,8 +810,7 @@ return (
  </div>
  )}
 
-{activeTab === “ai” && (
-
+ {activeTab === "ai" && (
  <div>
  <div style={{background:"linear-gradient(135deg,#f5f0ea,#ede8e0)",border:"1px solid "+th.purple+"28",borderRadius:6,padding:20,marginBottom:16}}>
  <div style={{fontSize:10,color:th.muted,letterSpacing:"0.12em",textTransform:"uppercase",fontFamily:"'Inter',sans-serif",marginBottom:8}}>AI Sleep Planner &mdash; Premium</div>
@@ -864,14 +854,14 @@ return (
  );
 }
 
-// Stable top-level components (must be outside App to prevent keyboard dismiss)
 
-const inputStyle = { background:”#faf8f5”, border:“1px solid #e8e2db”, borderRadius:6, padding:“10px 14px”, color:”#1a1a1a”, fontSize:13, width:“100%”, outline:“none”, boxSizing:“border-box”, fontFamily:”‘Inter’,sans-serif” };
-const labelStyle = { fontSize:10, color:”#8a8480”, marginBottom:5, display:“block”, fontWeight:500, letterSpacing:“0.08em”, textTransform:“uppercase”, fontFamily:”‘Inter’,sans-serif” };
+// Stable top-level components (must be outside App to prevent keyboard dismiss) 
 
-function FormField({ label, field, type=“text”, options, form, setForm }) {
-return (
+const inputStyle = { background:"#faf8f5", border:"1px solid #e8e2db", borderRadius:6, padding:"10px 14px", color:"#1a1a1a", fontSize:13, width:"100%", outline:"none", boxSizing:"border-box", fontFamily:"'Inter',sans-serif" };
+const labelStyle = { fontSize:10, color:"#8a8480", marginBottom:5, display:"block", fontWeight:500, letterSpacing:"0.08em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" };
 
+function FormField({ label, field, type="text", options, form, setForm }) {
+ return (
  <div style={{ marginBottom:14 }}>
  <label style={labelStyle}>{label}</label>
  {options
@@ -882,9 +872,8 @@ return (
 }
 
 function EntryModal({ modal, form, setForm, setModal, saveEntry }) {
-if (!modal) return null;
-return (
-
+ if (!modal) return null;
+ return (
  <div style={{ position:"fixed", inset:0, background:"rgba(20,18,16,0.55)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:24, backdropFilter:"blur(4px)" }}
  onClick={()=>setModal(null)}>
  <div style={{ background:"#fff", border:"1px solid #f0e4d7", borderRadius:24, padding:28, width:"100%", maxWidth:480, boxShadow:"0 8px 32px rgba(0,0,0,0.1)", maxHeight:"90vh", overflowY:"auto" }}
@@ -908,9 +897,8 @@ return (
 }
 
 function DeleteModal({ confirmDelete, setConfirmDelete, deleteEntry }) {
-if (!confirmDelete) return null;
-return (
-
+ if (!confirmDelete) return null;
+ return (
  <div style={{ position:"fixed", inset:0, background:"rgba(20,18,16,0.55)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:24, backdropFilter:"blur(4px)" }}
  onClick={()=>setConfirmDelete(null)}>
  <div style={{ background:"#fff", border:"1px solid #f0e4d7", borderRadius:24, padding:28, width:"100%", maxWidth:360, boxShadow:"0 8px 32px rgba(0,0,0,0.1)", textAlign:"center" }}
@@ -928,8 +916,7 @@ return (
 }
 
 function EntryCard({ item, dataKey, label, fields, kidScoped=false, children, openEdit, setConfirmDelete, c }) {
-return (
-
+ return (
  <div style={{ ...c.card, position:"relative" }}>
  <div style={{ position:"absolute", top:14, right:14, display:"flex", gap:4 }}>
  <button style={c.iconBtn(theme.blue)} onClick={()=>openEdit(item, dataKey, fields, dataKey, kidScoped)}></button>
@@ -941,9 +928,8 @@ return (
 }
 
 function PageHeader({ title, btnLabel, btnColor, onAdd }) {
-const col = btnColor || theme.accent;
-return (
-
+ const col = btnColor || theme.accent;
+ return (
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20, flexWrap:"wrap", gap:10 }}>
  <h2 style={{ margin:0, fontWeight:500 }}>{title}</h2>
  {btnLabel && <button style={{ padding:"10px 22px", borderRadius:4, background:col, color:"#fff", border:"none", cursor:"pointer", fontSize:11, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", boxShadow:"none", whiteSpace:"nowrap", fontFamily:"'Inter',sans-serif" }} onClick={onAdd}>{btnLabel}</button>}
@@ -952,9 +938,8 @@ return (
 }
 
 function InfoBanner({ children, gradient }) {
-const bg = gradient || “linear-gradient(135deg,#faf8f5,#f5f0ea)”;
-return (
-
+ const bg = gradient || "linear-gradient(135deg,#faf8f5,#f5f0ea)";
+ return (
  <div style={{ background:bg, border:"none", borderRadius:8, padding:20, marginBottom:16, boxShadow:"0 2px 8px rgba(0,0,0,0.05)" }}>
  <p style={{ margin:0, fontSize:13, color:"#8a8480", lineHeight:1.7 }}>{children}</p>
  </div>
@@ -962,44 +947,43 @@ return (
 }
 
 const MOTIVATIONS = [
-{ quote:“You are doing better than you think.”, author:“A reminder for every mama” },
-{ quote:“The days are long but the years are short.”, author:“Gretchen Rubin” },
-{ quote:“You do not have to be perfect to be an amazing mom.”, author:“A reminder for every mama” },
-{ quote:“Motherhood is the greatest thing and the hardest thing.”, author:“Ricki Lake” },
-{ quote:“There is no way to be a perfect mother, but a million ways to be a good one.”, author:“Jill Churchill” },
-{ quote:“A mother’s love endures through all.”, author:“Washington Irving” },
-{ quote:“Rest when you need to. You are not a machine.”, author:“A reminder for every mama” },
-{ quote:“Asking for help is not a weakness — it is wisdom.”, author:“A reminder for every mama” },
-{ quote:“You were made for this, even on the days it does not feel like it.”, author:“A reminder for every mama” },
-{ quote:“Taking care of yourself is taking care of your family.”, author:“A reminder for every mama” },
-{ quote:“Behind every great child is a mother who was pretty sure she was failing.”, author:“A reminder for every mama” },
-{ quote:“Your calm is contagious. So is your love.”, author:“A reminder for every mama” },
-{ quote:“Some days you just have to create your own sunshine.”, author:“A reminder for every mama” },
-{ quote:“You are your child’s whole world.”, author:“A reminder for every mama” },
-{ quote:“Every day you show up is a good day.”, author:“A reminder for every mama” },
-{ quote:“Nourishing yourself in a way that helps you blossom is attainable.”, author:“Deborah Day” },
-{ quote:“You cannot pour from an empty cup. Take care of yourself first.”, author:“A reminder for every mama” },
-{ quote:“Progress, not perfection.”, author:“A reminder for every mama” },
-{ quote:“The work you do as a mother is seen, even when it feels invisible.”, author:“A reminder for every mama” },
-{ quote:“You are raising a human being. That is extraordinary.”, author:“A reminder for every mama” },
-{ quote:“Be gentle with yourself — you are a child of the universe.”, author:“Max Ehrmann” },
-{ quote:“Even the hardest days end.”, author:“A reminder for every mama” },
-{ quote:“Your love is the safest place your child will ever know.”, author:“A reminder for every mama” },
-{ quote:“It is okay to not have it all figured out.”, author:“A reminder for every mama” },
-{ quote:“Small steps forward are still steps forward.”, author:“A reminder for every mama” },
-{ quote:“You matter beyond your role as a mother.”, author:“A reminder for every mama” },
-{ quote:“Grace over guilt — always.”, author:“A reminder for every mama” },
-{ quote:“The love you give your children echoes for generations.”, author:“A reminder for every mama” },
-{ quote:“You are enough, exactly as you are.”, author:“A reminder for every mama” },
-{ quote:“Today, just do the next right thing.”, author:“A reminder for every mama” },
-{ quote:“The fact that you worry about being a good mother means you already are one.”, author:“Jodi Picoult” },
+ { quote:"You are doing better than you think.", author:"A reminder for every mama" },
+ { quote:"The days are long but the years are short.", author:"Gretchen Rubin" },
+ { quote:"You do not have to be perfect to be an amazing mom.", author:"A reminder for every mama" },
+ { quote:"Motherhood is the greatest thing and the hardest thing.", author:"Ricki Lake" },
+ { quote:"There is no way to be a perfect mother, but a million ways to be a good one.", author:"Jill Churchill" },
+ { quote:"A mother's love endures through all.", author:"Washington Irving" },
+ { quote:"Rest when you need to. You are not a machine.", author:"A reminder for every mama" },
+ { quote:"Asking for help is not a weakness -- it is wisdom.", author:"A reminder for every mama" },
+ { quote:"You were made for this, even on the days it does not feel like it.", author:"A reminder for every mama" },
+ { quote:"Taking care of yourself is taking care of your family.", author:"A reminder for every mama" },
+ { quote:"Behind every great child is a mother who was pretty sure she was failing.", author:"A reminder for every mama" },
+ { quote:"Your calm is contagious. So is your love.", author:"A reminder for every mama" },
+ { quote:"Some days you just have to create your own sunshine.", author:"A reminder for every mama" },
+ { quote:"You are your child's whole world.", author:"A reminder for every mama" },
+ { quote:"Every day you show up is a good day.", author:"A reminder for every mama" },
+ { quote:"Nourishing yourself in a way that helps you blossom is attainable.", author:"Deborah Day" },
+ { quote:"You cannot pour from an empty cup. Take care of yourself first.", author:"A reminder for every mama" },
+ { quote:"Progress, not perfection.", author:"A reminder for every mama" },
+ { quote:"The work you do as a mother is seen, even when it feels invisible.", author:"A reminder for every mama" },
+ { quote:"You are raising a human being. That is extraordinary.", author:"A reminder for every mama" },
+ { quote:"Be gentle with yourself -- you are a child of the universe.", author:"Max Ehrmann" },
+ { quote:"Even the hardest days end.", author:"A reminder for every mama" },
+ { quote:"Your love is the safest place your child will ever know.", author:"A reminder for every mama" },
+ { quote:"It is okay to not have it all figured out.", author:"A reminder for every mama" },
+ { quote:"Small steps forward are still steps forward.", author:"A reminder for every mama" },
+ { quote:"You matter beyond your role as a mother.", author:"A reminder for every mama" },
+ { quote:"Grace over guilt -- always.", author:"A reminder for every mama" },
+ { quote:"The love you give your children echoes for generations.", author:"A reminder for every mama" },
+ { quote:"You are enough, exactly as you are.", author:"A reminder for every mama" },
+ { quote:"Today, just do the next right thing.", author:"A reminder for every mama" },
+ { quote:"The fact that you worry about being a good mother means you already are one.", author:"Jodi Picoult" },
 ];
 
 function DailyMotivation() {
-const idx = new Date().getDate() % MOTIVATIONS.length;
-const mot = MOTIVATIONS[idx];
-return (
-
+ const idx = new Date().getDate() % MOTIVATIONS.length;
+ const mot = MOTIVATIONS[idx];
+ return (
  <div style={{ background:"#faf8f5", border:"1px solid #e8e2db", borderLeft:"3px solid #b5836a", borderRadius:6, padding:"18px 20px", marginBottom:16 }}>
  <div style={{ fontSize:10, fontWeight:500, letterSpacing:"0.14em", textTransform:"uppercase", color:"#8a8480", fontFamily:"'Inter',sans-serif", marginBottom:10 }}>
  Daily Note
@@ -1014,427 +998,424 @@ return (
  );
 }
 
-// ── Visit Summary Scanner ─────────────────────────────────────────────────────
+
+// â”€â”€ Visit Summary Scanner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function VisitScanner({ kid, onSave, onClose }) {
-const [image,     setImage]     = useState(null);
-const [imageData, setImageData] = useState(null);
-const [loading,   setLoading]   = useState(false);
-const [extracted, setExtracted] = useState(null);
-const [edited,    setEdited]    = useState(null);
-const [error,     setError]     = useState(null);
-const [consent,   setConsent]   = useState(false);
-const fileRef = React.useRef(null);
+  const [image,     setImage]     = useState(null);
+  const [imageData, setImageData] = useState(null);
+  const [loading,   setLoading]   = useState(false);
+  const [extracted, setExtracted] = useState(null);
+  const [edited,    setEdited]    = useState(null);
+  const [error,     setError]     = useState(null);
+  const [consent,   setConsent]   = useState(false);
+  const fileRef = React.useRef(null);
 
-const handleFile = (e) => {
-const file = e.target.files[0];
-if (!file) return;
-const reader = new FileReader();
-reader.onload = (ev) => {
-setImage(ev.target.result);
-setImageData(ev.target.result.split(”,”)[1]);
-setExtracted(null); setEdited(null); setError(null);
-};
-reader.readAsDataURL(file);
-};
+  const handleFile = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setImage(ev.target.result);
+      setImageData(ev.target.result.split(",")[1]);
+      setExtracted(null); setEdited(null); setError(null);
+    };
+    reader.readAsDataURL(file);
+  };
 
-const scan = async () => {
-if (!imageData || !consent) return;
-setLoading(true); setError(null);
-const prompt = “You are a medical records assistant helping a mother log information from an after-visit summary for her child “ + kid.name + “. Read the document and extract the following. Respond ONLY with valid JSON, no markdown: {date,doctor,clinic,reason,diagnosis,followUp,medications,notes}”;
-try {
-const res  = await fetch(“https://api.anthropic.com/v1/messages”, {
-method:“POST”, headers:{“Content-Type”:“application/json”},
-body: JSON.stringify({ model:“claude-sonnet-4-20250514”, max_tokens:1000,
-messages:[{ role:“user”, content:[
-{ type:“image”, source:{ type:“base64”, media_type:“image/jpeg”, data:imageData }},
-{ type:“text”,  text:prompt }
-]}]
-})
-});
-const data = await res.json();
-const text = data.content?.map(b=>b.text||””).join(””).replace(/`json|`/g,””).trim();
-const parsed = JSON.parse(text);
-setExtracted(parsed); setEdited(parsed);
-} catch(e) { setError(“Could not read the document. Please try a clearer photo or enter details manually.”); }
-setLoading(false);
-};
+  const scan = async () => {
+    if (!imageData || !consent) return;
+    setLoading(true); setError(null);
+    const prompt = "You are a medical records assistant helping a mother log information from an after-visit summary for her child " + kid.name + ". Read the document and extract the following. Respond ONLY with valid JSON, no markdown: {date,doctor,clinic,reason,diagnosis,followUp,medications,notes}";
+    try {
+      const res  = await fetch("https://api.anthropic.com/v1/messages", {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({ model:"claude-sonnet-4-20250514", max_tokens:1000,
+          messages:[{ role:"user", content:[
+            { type:"image", source:{ type:"base64", media_type:"image/jpeg", data:imageData }},
+            { type:"text",  text:prompt }
+          ]}]
+        })
+      });
+      const data = await res.json();
+      const text = data.content?.map(b=>b.text||"").join("").replace(/```json|```/g,"").trim();
+      const parsed = JSON.parse(text);
+      setExtracted(parsed); setEdited(parsed);
+    } catch(e) { setError("Could not read the document. Please try a clearer photo or enter details manually."); }
+    setLoading(false);
+  };
 
-const fields = [
-{label:“Date”,                   field:“date”,        type:“date”},
-{label:“Doctor / Provider”,      field:“doctor”},
-{label:“Clinic / Hospital”,      field:“clinic”},
-{label:“Reason for Visit”,       field:“reason”},
-{label:“Diagnosis”,              field:“diagnosis”},
-{label:“Follow-up Instructions”, field:“followUp”},
-{label:“Medications Prescribed”, field:“medications”},
-{label:“Notes”,                  field:“notes”},
-];
+  const fields = [
+    {label:"Date",                   field:"date",        type:"date"},
+    {label:"Doctor / Provider",      field:"doctor"},
+    {label:"Clinic / Hospital",      field:"clinic"},
+    {label:"Reason for Visit",       field:"reason"},
+    {label:"Diagnosis",              field:"diagnosis"},
+    {label:"Follow-up Instructions", field:"followUp"},
+    {label:"Medications Prescribed", field:"medications"},
+    {label:"Notes",                  field:"notes"},
+  ];
 
-const th = { accent:”#b5836a”, green:”#7a9e87”, yellow:”#c9a96e”, blue:”#7a96a8”, coral:”#c0614a”, muted:”#8a8480”, text:”#1a1a1a”, border:”#e8e2db”, purple:”#8f8aa0” };
+  const th = { accent:"#b5836a", green:"#7a9e87", yellow:"#c9a96e", blue:"#7a96a8", coral:"#c0614a", muted:"#8a8480", text:"#1a1a1a", border:"#e8e2db", purple:"#8f8aa0" };
 
-return (
-<div style={{ position:“fixed”, inset:0, background:“rgba(26,26,26,0.6)”, display:“flex”, alignItems:“center”, justifyContent:“center”, zIndex:300, padding:20 }} onClick={onClose}>
-<div style={{ background:”#ffffff”, border:“1px solid #e8e2db”, borderRadius:8, padding:28, width:“100%”, maxWidth:520, maxHeight:“92vh”, overflowY:“auto”, boxShadow:“0 8px 32px rgba(0,0,0,0.12)” }} onClick={e=>e.stopPropagation()}>
+  return (
+    <div style={{ position:"fixed", inset:0, background:"rgba(26,26,26,0.6)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300, padding:20 }} onClick={onClose}>
+      <div style={{ background:"#ffffff", border:"1px solid #e8e2db", borderRadius:8, padding:28, width:"100%", maxWidth:520, maxHeight:"92vh", overflowY:"auto", boxShadow:"0 8px 32px rgba(0,0,0,0.12)" }} onClick={e=>e.stopPropagation()}>
 
-```
-    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
-      <div>
-        <div style={{ fontWeight:400, fontSize:24, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic" }}>Scan Visit Summary</div>
-        <div style={{ fontSize:10, color:th.muted, letterSpacing:"0.08em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif", marginTop:2 }}>AI-powered &middot; for {kid.name}</div>
-      </div>
-      <button onClick={onClose} style={{ background:"none", border:"none", color:th.muted, cursor:"pointer", fontSize:20 }}>&#x2715;</button>
-    </div>
-
-    {/* Privacy notice + consent */}
-    <div style={{ background:"#f3f6f8", border:"1px solid #7a96a820", borderRadius:6, padding:16, marginBottom:16 }}>
-      <div style={{ fontSize:10, color:th.muted, letterSpacing:"0.12em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif", marginBottom:10 }}>Privacy Notice</div>
-      <p style={{ margin:"0 0 10px", fontSize:12, lineHeight:1.8, color:th.text, fontFamily:"'Inter',sans-serif" }}>
-        When you scan a document, the image is sent securely over an encrypted HTTPS connection to our AI service (Anthropic) to extract the visit information. <strong>The image is never stored</strong> — only the text fields you review and save are kept in your account.
-      </p>
-      <div style={{ background:"#c9a96e14", border:"1px solid #c9a96e33", borderRadius:4, padding:"10px 12px", marginBottom:12 }}>
-        <div style={{ fontSize:10, color:th.yellow, fontFamily:"'Inter',sans-serif", letterSpacing:"0.06em", textTransform:"uppercase", marginBottom:4 }}>Before you scan</div>
-        <div style={{ fontSize:12, color:th.text, lineHeight:1.7, fontFamily:"'Inter',sans-serif" }}>If your document contains insurance numbers or Social Security numbers, consider covering those before scanning. Only the medical visit details are needed.</div>
-      </div>
-      <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
-        <input type="checkbox" id="scanConsent" checked={consent} onChange={e=>setConsent(e.target.checked)} style={{ marginTop:3, accentColor:th.accent, width:14, height:14, flexShrink:0, cursor:"pointer" }} />
-        <label htmlFor="scanConsent" style={{ fontSize:12, color:th.text, lineHeight:1.7, fontFamily:"'Inter',sans-serif", cursor:"pointer" }}>
-          I understand this image will be sent securely to Anthropic for text extraction and will not be stored. I consent to this processing.
-        </label>
-      </div>
-    </div>
-
-    {/* How it works */}
-    {!image && (
-      <div style={{ background:"#faf8f5", border:"1px solid #e8e2db", borderRadius:6, padding:16, marginBottom:16 }}>
-        <div style={{ fontSize:10, color:th.muted, letterSpacing:"0.12em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif", marginBottom:10 }}>How it works</div>
-        {["Take a photo or upload your after-visit summary, discharge paper, or vaccination record","Claude AI reads the document and extracts the key details","Review and edit the extracted fields","Save directly to the visit log"].map((step,i) => (
-          <div key={i} style={{ display:"flex", gap:12, marginBottom:8, alignItems:"flex-start" }}>
-            <div style={{ width:20, height:20, borderRadius:3, background:th.accent, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:500, flexShrink:0, fontFamily:"'Inter',sans-serif" }}>{i+1}</div>
-            <div style={{ fontSize:12, color:th.muted, lineHeight:1.6, fontFamily:"'Inter',sans-serif" }}>{step}</div>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
+          <div>
+            <div style={{ fontWeight:400, fontSize:24, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic" }}>Scan Visit Summary</div>
+            <div style={{ fontSize:10, color:th.muted, letterSpacing:"0.08em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif", marginTop:2 }}>AI-powered &middot; for {kid.name}</div>
           </div>
-        ))}
-      </div>
-    )}
-
-    {/* Upload area */}
-    {!image ? (
-      <div onClick={()=>{ if(consent) fileRef.current?.click(); }}
-        style={{ border:"1.5px dashed "+(consent?th.accent:th.border), borderRadius:6, padding:40, textAlign:"center", cursor:consent?"pointer":"not-allowed", background:consent?"#faf8f5":"#f5f4f2", marginBottom:16, opacity:consent?1:0.6, transition:"all 0.2s" }}>
-        <div style={{ fontWeight:400, fontSize:20, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", marginBottom:6, color:consent?"#1a1a1a":th.muted }}>
-          {consent ? "Upload or take a photo" : "Check the consent box above to continue"}
+          <button onClick={onClose} style={{ background:"none", border:"none", color:th.muted, cursor:"pointer", fontSize:20 }}>&#x2715;</button>
         </div>
-        <div style={{ fontSize:11, color:th.muted, letterSpacing:"0.04em", fontFamily:"'Inter',sans-serif" }}>After-visit summary &middot; Discharge paper &middot; Vaccination record &middot; Lab results</div>
-        <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display:"none" }} onChange={handleFile} />
-      </div>
-    ) : (
-      <div style={{ marginBottom:16 }}>
-        <img src={image} alt="Visit document" style={{ width:"100%", borderRadius:6, border:"1px solid #e8e2db", maxHeight:200, objectFit:"cover" }} />
-        <div style={{ display:"flex", gap:8, marginTop:10 }}>
-          <button style={{ padding:"10px 18px", borderRadius:4, background:th.accent, color:"#fff", border:"none", cursor:loading||!consent?"not-allowed":"pointer", fontSize:11, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif", opacity:loading||!consent?0.6:1 }} onClick={scan} disabled={loading||!consent}>
-            {loading ? "Reading document..." : extracted ? "Re-scan" : "Extract Information"}
-          </button>
-          <button style={{ padding:"10px 18px", borderRadius:4, background:"transparent", color:th.muted, border:"1px solid #e8e2db", cursor:"pointer", fontSize:11, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" }} onClick={()=>{ setImage(null); setImageData(null); setExtracted(null); setEdited(null); }}>
-            Different photo
-          </button>
-        </div>
-      </div>
-    )}
 
-    {loading && (
-      <div style={{ textAlign:"center", padding:"20px 0", color:th.muted }}>
-        <div style={{ fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", fontSize:20, marginBottom:4 }}>Reading your document...</div>
-        <div style={{ fontSize:11, color:th.muted, fontFamily:"'Inter',sans-serif", letterSpacing:"0.06em" }}>Claude AI is extracting visit information</div>
-      </div>
-    )}
-
-    {error && <div style={{ background:"#c0614a10", border:"1px solid #c0614a33", borderRadius:6, padding:14, marginBottom:16, fontSize:12, color:th.coral, fontFamily:"'Inter',sans-serif", lineHeight:1.7 }}>{error}</div>}
-
-    {extracted && edited && !loading && (
-      <div>
-        <div style={{ fontSize:10, color:th.green, letterSpacing:"0.12em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif", marginBottom:14, display:"flex", alignItems:"center", gap:8 }}>
-          <div style={{ width:6, height:6, borderRadius:"50%", background:th.green }} /> Information extracted — review and edit before saving
-        </div>
-        {fields.map(f => (
-          <div key={f.field} style={{ marginBottom:14 }}>
-            <label style={{ fontSize:10, color:th.muted, marginBottom:5, display:"block", fontWeight:500, letterSpacing:"0.08em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" }}>{f.label}</label>
-            <input style={{ background:"#faf8f5", border:"1px solid #e8e2db", borderRadius:6, padding:"10px 14px", color:"#1a1a1a", fontSize:13, width:"100%", outline:"none", boxSizing:"border-box", fontFamily:"'Inter',sans-serif" }}
-              type={f.type||"text"} value={edited[f.field]||""} onChange={e=>setEdited(prev=>({...prev,[f.field]:e.target.value}))} />
+        {/* Privacy notice + consent */}
+        <div style={{ background:"#f3f6f8", border:"1px solid #7a96a820", borderRadius:6, padding:16, marginBottom:16 }}>
+          <div style={{ fontSize:10, color:th.muted, letterSpacing:"0.12em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif", marginBottom:10 }}>Privacy Notice</div>
+          <p style={{ margin:"0 0 10px", fontSize:12, lineHeight:1.8, color:th.text, fontFamily:"'Inter',sans-serif" }}>
+            When you scan a document, the image is sent securely over an encrypted HTTPS connection to our AI service (Anthropic) to extract the visit information. <strong>The image is never stored</strong> -- only the text fields you review and save are kept in your account.
+          </p>
+          <div style={{ background:"#c9a96e14", border:"1px solid #c9a96e33", borderRadius:4, padding:"10px 12px", marginBottom:12 }}>
+            <div style={{ fontSize:10, color:th.yellow, fontFamily:"'Inter',sans-serif", letterSpacing:"0.06em", textTransform:"uppercase", marginBottom:4 }}>Before you scan</div>
+            <div style={{ fontSize:12, color:th.text, lineHeight:1.7, fontFamily:"'Inter',sans-serif" }}>If your document contains insurance numbers or Social Security numbers, consider covering those before scanning. Only the medical visit details are needed.</div>
           </div>
-        ))}
-        <div style={{ display:"flex", gap:10, marginTop:20 }}>
-          <button style={{ padding:"10px 22px", borderRadius:4, background:th.accent, color:"#fff", border:"none", cursor:"pointer", fontSize:11, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" }} onClick={()=>onSave(edited)}>Save to Visit Log</button>
-          <button style={{ padding:"10px 18px", borderRadius:4, background:"transparent", color:th.accent, border:"1px solid "+th.accent, cursor:"pointer", fontSize:11, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" }} onClick={onClose}>Cancel</button>
+          <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+            <input type="checkbox" id="scanConsent" checked={consent} onChange={e=>setConsent(e.target.checked)} style={{ marginTop:3, accentColor:th.accent, width:14, height:14, flexShrink:0, cursor:"pointer" }} />
+            <label htmlFor="scanConsent" style={{ fontSize:12, color:th.text, lineHeight:1.7, fontFamily:"'Inter',sans-serif", cursor:"pointer" }}>
+              I understand this image will be sent securely to Anthropic for text extraction and will not be stored. I consent to this processing.
+            </label>
+          </div>
         </div>
-      </div>
-    )}
-  </div>
-</div>
-```
 
-);
+        {/* How it works */}
+        {!image && (
+          <div style={{ background:"#faf8f5", border:"1px solid #e8e2db", borderRadius:6, padding:16, marginBottom:16 }}>
+            <div style={{ fontSize:10, color:th.muted, letterSpacing:"0.12em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif", marginBottom:10 }}>How it works</div>
+            {["Take a photo or upload your after-visit summary, discharge paper, or vaccination record","Claude AI reads the document and extracts the key details","Review and edit the extracted fields","Save directly to the visit log"].map((step,i) => (
+              <div key={i} style={{ display:"flex", gap:12, marginBottom:8, alignItems:"flex-start" }}>
+                <div style={{ width:20, height:20, borderRadius:3, background:th.accent, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontSize:10, fontWeight:500, flexShrink:0, fontFamily:"'Inter',sans-serif" }}>{i+1}</div>
+                <div style={{ fontSize:12, color:th.muted, lineHeight:1.6, fontFamily:"'Inter',sans-serif" }}>{step}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Upload area */}
+        {!image ? (
+          <div onClick={()=>{ if(consent) fileRef.current?.click(); }}
+            style={{ border:"1.5px dashed "+(consent?th.accent:th.border), borderRadius:6, padding:40, textAlign:"center", cursor:consent?"pointer":"not-allowed", background:consent?"#faf8f5":"#f5f4f2", marginBottom:16, opacity:consent?1:0.6, transition:"all 0.2s" }}>
+            <div style={{ fontWeight:400, fontSize:20, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", marginBottom:6, color:consent?"#1a1a1a":th.muted }}>
+              {consent ? "Upload or take a photo" : "Check the consent box above to continue"}
+            </div>
+            <div style={{ fontSize:11, color:th.muted, letterSpacing:"0.04em", fontFamily:"'Inter',sans-serif" }}>After-visit summary &middot; Discharge paper &middot; Vaccination record &middot; Lab results</div>
+            <input ref={fileRef} type="file" accept="image/*" capture="environment" style={{ display:"none" }} onChange={handleFile} />
+          </div>
+        ) : (
+          <div style={{ marginBottom:16 }}>
+            <img src={image} alt="Visit document" style={{ width:"100%", borderRadius:6, border:"1px solid #e8e2db", maxHeight:200, objectFit:"cover" }} />
+            <div style={{ display:"flex", gap:8, marginTop:10 }}>
+              <button style={{ padding:"10px 18px", borderRadius:4, background:th.accent, color:"#fff", border:"none", cursor:loading||!consent?"not-allowed":"pointer", fontSize:11, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif", opacity:loading||!consent?0.6:1 }} onClick={scan} disabled={loading||!consent}>
+                {loading ? "Reading document..." : extracted ? "Re-scan" : "Extract Information"}
+              </button>
+              <button style={{ padding:"10px 18px", borderRadius:4, background:"transparent", color:th.muted, border:"1px solid #e8e2db", cursor:"pointer", fontSize:11, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" }} onClick={()=>{ setImage(null); setImageData(null); setExtracted(null); setEdited(null); }}>
+                Different photo
+              </button>
+            </div>
+          </div>
+        )}
+
+        {loading && (
+          <div style={{ textAlign:"center", padding:"20px 0", color:th.muted }}>
+            <div style={{ fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", fontSize:20, marginBottom:4 }}>Reading your document...</div>
+            <div style={{ fontSize:11, color:th.muted, fontFamily:"'Inter',sans-serif", letterSpacing:"0.06em" }}>Claude AI is extracting visit information</div>
+          </div>
+        )}
+
+        {error && <div style={{ background:"#c0614a10", border:"1px solid #c0614a33", borderRadius:6, padding:14, marginBottom:16, fontSize:12, color:th.coral, fontFamily:"'Inter',sans-serif", lineHeight:1.7 }}>{error}</div>}
+
+        {extracted && edited && !loading && (
+          <div>
+            <div style={{ fontSize:10, color:th.green, letterSpacing:"0.12em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif", marginBottom:14, display:"flex", alignItems:"center", gap:8 }}>
+              <div style={{ width:6, height:6, borderRadius:"50%", background:th.green }} /> Information extracted -- review and edit before saving
+            </div>
+            {fields.map(f => (
+              <div key={f.field} style={{ marginBottom:14 }}>
+                <label style={{ fontSize:10, color:th.muted, marginBottom:5, display:"block", fontWeight:500, letterSpacing:"0.08em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" }}>{f.label}</label>
+                <input style={{ background:"#faf8f5", border:"1px solid #e8e2db", borderRadius:6, padding:"10px 14px", color:"#1a1a1a", fontSize:13, width:"100%", outline:"none", boxSizing:"border-box", fontFamily:"'Inter',sans-serif" }}
+                  type={f.type||"text"} value={edited[f.field]||""} onChange={e=>setEdited(prev=>({...prev,[f.field]:e.target.value}))} />
+              </div>
+            ))}
+            <div style={{ display:"flex", gap:10, marginTop:20 }}>
+              <button style={{ padding:"10px 22px", borderRadius:4, background:th.accent, color:"#fff", border:"none", cursor:"pointer", fontSize:11, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" }} onClick={()=>onSave(edited)}>Save to Visit Log</button>
+              <button style={{ padding:"10px 18px", borderRadius:4, background:"transparent", color:th.accent, border:"1px solid "+th.accent, cursor:"pointer", fontSize:11, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" }} onClick={onClose}>Cancel</button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // Load fonts
-if (typeof document !== “undefined” && !document.getElementById(“mot-fonts”)) {
-const link = document.createElement(“link”);
-link.id = “mot-fonts”;
-link.rel = “stylesheet”;
-link.href = “https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600;700;800&display=swap”;
-document.head.appendChild(link);
+if (typeof document !== "undefined" && !document.getElementById("mot-fonts")) {
+ const link = document.createElement("link");
+ link.id = "mot-fonts";
+ link.rel = "stylesheet";
+ link.href = "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600;700;800&display=swap";
+ document.head.appendChild(link);
 }
 
 export default function App() {
-const today = new Date().toISOString().split(“T”)[0];
-const todayDate = new Date();
+ const today = new Date().toISOString().split("T")[0];
+ const todayDate = new Date();
 
-const [mainTab, setMainTab] = useState(“calendar”);
-const [view, setView] = useState(“dashboard”);
-const [momView, setMomView] = useState(“momDashboard”);
-const [kids, setKids] = useState(initialKids);
-const [selectedKid,setSelectedKid]= useState(initialKids[0]);
+ const [mainTab, setMainTab] = useState("calendar");
+ const [view, setView] = useState("dashboard");
+ const [momView, setMomView] = useState("momDashboard");
+ const [kids, setKids] = useState(initialKids);
+ const [selectedKid,setSelectedKid]= useState(initialKids[0]);
 
-// Calendar state
-const [events, setEvents] = useState(initialEvents);
-const [calMonth, setCalMonth] = useState(todayDate.getMonth());
-const [calYear, setCalYear] = useState(todayDate.getFullYear());
-const [selectedDate, setSelectedDate] = useState(null);
-const [calView, setCalView] = useState(“month”); // “month” | “list”
-const [filterMember, setFilterMember] = useState(“all”);
+ // Calendar state
+ const [events, setEvents] = useState(initialEvents);
+ const [calMonth, setCalMonth] = useState(todayDate.getMonth());
+ const [calYear, setCalYear] = useState(todayDate.getFullYear());
+ const [selectedDate, setSelectedDate] = useState(null);
+ const [calView, setCalView] = useState("month"); // "month" | "list"
+ const [filterMember, setFilterMember] = useState("all");
 
-// Kids data
-const [symptoms, setSymptoms] = useState([{ id:1, kidId:1, date:“2026-05-07”, symptom:“Runny nose”, severity:“Mild”, notes:“Clear discharge” },{ id:2, kidId:2, date:“2026-05-05”, symptom:“Headache”, severity:“Moderate”, notes:“After school” }]);
-const [meds, setMeds] = useState([{ id:1, kidId:1, name:“Children’s Tylenol”, dose:“5ml”, freq:“Every 6hrs”, startDate:“2026-05-07”, active:true },{ id:2, kidId:2, name:“Vitamin D”, dose:“400 IU”, freq:“Daily”, startDate:“2026-01-01”, active:true }]);
-const [visits, setVisits] = useState([{ id:1, kidId:1, date:“2026-04-10”, doctor:“Dr. Patel”, reason:“Annual checkup”, notes:“All clear” },{ id:2, kidId:2, date:“2026-03-22”, doctor:“Dr. Nguyen”, reason:“Ear infection”, notes:“Amoxicillin 10 days” }]);
-const [growth, setGrowth] = useState([{ id:1, kidId:1, date:“2026-04-10”, height:102, weight:16.5, headCirc:51 },{ id:2, kidId:2, date:“2026-03-22”, height:138, weight:32, headCirc:null }]);
-const [vaccines, setVaccines] = useState([{ id:1, kidId:1, name:“DTaP”, date:“2024-09-01” },{ id:2, kidId:2, name:“Flu”, date:“2025-10-15” }]);
-const [kidVitals, setKidVitals] = useState([{ id:1, kidId:1, date:“2026-04-10”, temp:98.6, hr:100, rr:24, bp:“90/60”, o2:99, notes:“Well visit” }]);
-const [kidLabs, setKidLabs] = useState([{ id:1, kidId:1, date:“2026-04-10”, test:“Hemoglobin”, result:“11.5”, unit:“g/dL”, normal:“11–14”, notes:”” }]);
-const [milestones, setMilestones] = useState([{ id:1, kidId:1, age:“4 Years”, milestone:“Hops on one foot”, achieved:true, date:“2026-03-01”, notes:”” }]);
-const [feedings, setFeedings] = useState([{ id:1, kidId:1, date:“2026-05-09”, time:“07:00”, type:“Bottle”, amount:“4oz”, notes:“Finished well” }]);
-const [diapers, setDiapers] = useState([{ id:1, kidId:1, date:“2026-05-09”, time:“07:30”, type:“Wet”, notes:”” },{ id:2, kidId:1, date:“2026-05-09”, time:“10:00”, type:“Dirty”, notes:“Yellow, seedy” }]);
-const [kidSleep, setKidSleep] = useState([{ id:1, kidId:1, date:“2026-05-09”, type:“Nap”, start:“13:00”, end:“14:30”, duration:90, notes:“Good nap” }]);
-const [kidAllergies, setKidAllergies] = useState([{ id:1, kidId:1, allergen:“Peanuts”, category:“Food”, severity:“Severe”, reaction:“Hives, facial swelling”, diagnosed:“2025-06-01”, epiPen:“Yes”, actionPlan:“Administer EpiPen, call 911”, notes:“Confirmed by allergist” }]);
-const [kidFirsts, setKidFirsts] = useState([
-{ id:1, kidId:1, title:“First Smile”, category:“Social”, date:“2026-02-14”, ageAtTime:“2 months”, witnesses:“Mom & Dad”, story:“Smiled at mama during morning feed — the whole room lit up.”, momFeeling:“I cried happy tears for 10 minutes straight “ },
-{ id:2, kidId:1, title:“First Laugh”, category:“Social”, date:“2026-03-20”, ageAtTime:“3 months”, witnesses:“Mom”, story:“Laughed out loud when I blew raspberries on her tummy.”, momFeeling:“Pure joy — I laughed harder than she did!” },
-]);
+ // Kids data
+ const [symptoms, setSymptoms] = useState([{ id:1, kidId:1, date:"2026-05-07", symptom:"Runny nose", severity:"Mild", notes:"Clear discharge" },{ id:2, kidId:2, date:"2026-05-05", symptom:"Headache", severity:"Moderate", notes:"After school" }]);
+ const [meds, setMeds] = useState([{ id:1, kidId:1, name:"Children's Tylenol", dose:"5ml", freq:"Every 6hrs", startDate:"2026-05-07", active:true },{ id:2, kidId:2, name:"Vitamin D", dose:"400 IU", freq:"Daily", startDate:"2026-01-01", active:true }]);
+ const [visits, setVisits] = useState([{ id:1, kidId:1, date:"2026-04-10", doctor:"Dr. Patel", reason:"Annual checkup", notes:"All clear" },{ id:2, kidId:2, date:"2026-03-22", doctor:"Dr. Nguyen", reason:"Ear infection", notes:"Amoxicillin 10 days" }]);
+ const [growth, setGrowth] = useState([{ id:1, kidId:1, date:"2026-04-10", height:102, weight:16.5, headCirc:51 },{ id:2, kidId:2, date:"2026-03-22", height:138, weight:32, headCirc:null }]);
+ const [vaccines, setVaccines] = useState([{ id:1, kidId:1, name:"DTaP", date:"2024-09-01" },{ id:2, kidId:2, name:"Flu", date:"2025-10-15" }]);
+ const [kidVitals, setKidVitals] = useState([{ id:1, kidId:1, date:"2026-04-10", temp:98.6, hr:100, rr:24, bp:"90/60", o2:99, notes:"Well visit" }]);
+ const [kidLabs, setKidLabs] = useState([{ id:1, kidId:1, date:"2026-04-10", test:"Hemoglobin", result:"11.5", unit:"g/dL", normal:"11-14", notes:"" }]);
+ const [milestones, setMilestones] = useState([{ id:1, kidId:1, age:"4 Years", milestone:"Hops on one foot", achieved:true, date:"2026-03-01", notes:"" }]);
+ const [feedings, setFeedings] = useState([{ id:1, kidId:1, date:"2026-05-09", time:"07:00", type:"Bottle", amount:"4oz", notes:"Finished well" }]);
+ const [diapers, setDiapers] = useState([{ id:1, kidId:1, date:"2026-05-09", time:"07:30", type:"Wet", notes:"" },{ id:2, kidId:1, date:"2026-05-09", time:"10:00", type:"Dirty", notes:"Yellow, seedy" }]);
+ const [kidSleep, setKidSleep] = useState([{ id:1, kidId:1, date:"2026-05-09", type:"Nap", start:"13:00", end:"14:30", duration:90, notes:"Good nap" }]);
+ const [kidAllergies, setKidAllergies] = useState([{ id:1, kidId:1, allergen:"Peanuts", category:"Food", severity:"Severe", reaction:"Hives, facial swelling", diagnosed:"2025-06-01", epiPen:"Yes", actionPlan:"Administer EpiPen, call 911", notes:"Confirmed by allergist" }]);
+ const [kidFirsts, setKidFirsts] = useState([
+ { id:1, kidId:1, title:"First Smile", category:"Social", date:"2026-02-14", ageAtTime:"2 months", witnesses:"Mom & Dad", story:"Smiled at mama during morning feed -- the whole room lit up.", momFeeling:"I cried happy tears for 10 minutes straight " },
+ { id:2, kidId:1, title:"First Laugh", category:"Social", date:"2026-03-20", ageAtTime:"3 months", witnesses:"Mom", story:"Laughed out loud when I blew raspberries on her tummy.", momFeeling:"Pure joy -- I laughed harder than she did!" },
+ ]);
 
-// Mom data
-const [feedingSessions, setFeedingSessions] = useState([{ id:1, date:“2026-05-09”, time:“06:30”, type:“Breastfeed”, side:“Left”, duration:15, oz:””, formulaBrand:””, notes:“Good latch” },{ id:2, date:“2026-05-09”, time:“09:00”, type:“Pump”, side:“Both”, duration:20, oz:“4”, formulaBrand:””, notes:“4oz total” },{ id:3, date:“2026-05-09”, time:“12:00”, type:“Formula Bottle”, side:“N/A”, duration:””, oz:“4”, formulaBrand:“Similac 360 Total Care”, notes:“Finished full bottle” }]);
-const [waterLog, setWaterLog] = useState([{ id:1, date:“2026-05-09”, cups:3, time:“08:00” },{ id:2, date:“2026-05-09”, cups:2, time:“11:00” }]);
-const [nutritionLog, setNutritionLog] = useState([{ id:1, date:“2026-05-09”, meal:“Breakfast”, foods:“Oatmeal, berries”, protein:“Yes”, iron:“No”, calcium:“Yes”, notes:”” }]);
-const [momMeds, setMomMeds] = useState([{ id:1, name:“Prenatal Vitamin”, dose:“1 tablet”, freq:“Daily”, startDate:“2026-01-01”, active:true },{ id:2, name:“Iron Supplement”, dose:“65mg”, freq:“Daily”, startDate:“2026-03-01”, active:true }]);
-const [momHealth, setMomHealth] = useState([{ id:1, date:“2026-05-09”, mood:“Good”, sleep:5, painLevel:2, notes:“Feeling more rested” }]);
-const [momVitals, setMomVitals] = useState([{ id:1, date:“2026-05-09”, bp:“118/76”, hr:72, temp:98.4, weight:145, notes:“Morning reading” }]);
-const [momLabs, setMomLabs] = useState([{ id:1, date:“2026-04-01”, test:“Hemoglobin”, result:“11.2”, unit:“g/dL”, normal:“12–16”, notes:“Slight anemia” }]);
-const [cycles, setCycles] = useState([{ id:1, startDate:“2026-04-10”, endDate:“2026-04-14”, flow:“Medium”, symptoms:“Mild cramping”, notes:”” }]);
-const [momAllergies, setMomAllergies] = useState([{ id:1, allergen:“Penicillin”, category:“Medication”, severity:“Severe”, reaction:“Anaphylaxis”, diagnosed:“2010-01-01”, epiPen:“Yes”, actionPlan:“No penicillin or related antibiotics. EpiPen on hand.”, notes:“Confirmed allergy — note in all medical records” }]);
-const [momVisits, setMomVisits] = useState([{ id:1, date:“2026-04-01”, doctor:“Dr. Rivera”, clinic:“Women’s Health Associates”, reason:“6-week postpartum checkup”, diagnosis:“Healing well”, followUp:“Return in 3 months”, medications:””, notes:“Cleared for exercise. Discussed contraception options.” }]);
-const [pumpSessions, setPumpSessions] = useState([
-{ id:1, date:“2026-05-09”, time:“06:00”, duration:20, leftOz:2.5, rightOz:2.5, totalOz:5, stored:“Fridge”, bagLabel:“05/09 6am”, notes:“Good output” },
-{ id:2, date:“2026-05-09”, time:“10:00”, duration:18, leftOz:2, rightOz:2, totalOz:4, stored:“Fridge”, bagLabel:“05/09 10am”, notes:”” },
-{ id:3, date:“2026-05-09”, time:“14:00”, duration:20, leftOz:2, rightOz:3, totalOz:5, stored:“Freezer”, bagLabel:“05/09 2pm”, notes:“Froze extra” },
-]);
-const [milkInventory, setMilkInventory] = useState([
-{ id:1, oz:5, stored:“Fridge”, pumped:“2026-05-09”, expires:“2026-05-13”, label:“05/09 6am”, used:false },
-{ id:2, oz:4, stored:“Fridge”, pumped:“2026-05-09”, expires:“2026-05-13”, label:“05/09 10am”, used:false },
-{ id:3, oz:5, stored:“Freezer”, pumped:“2026-05-09”, expires:“2027-05-09”, label:“05/09 2pm”, used:false },
-{ id:4, oz:4.5, stored:“Freezer”, pumped:“2026-05-08”, expires:“2027-05-08”, label:“05/08 pm”, used:false },
-]);
-const [checklistDone, setChecklistDone] = useState({});
+ // Mom data
+ const [feedingSessions, setFeedingSessions] = useState([{ id:1, date:"2026-05-09", time:"06:30", type:"Breastfeed", side:"Left", duration:15, oz:"", formulaBrand:"", notes:"Good latch" },{ id:2, date:"2026-05-09", time:"09:00", type:"Pump", side:"Both", duration:20, oz:"4", formulaBrand:"", notes:"4oz total" },{ id:3, date:"2026-05-09", time:"12:00", type:"Formula Bottle", side:"N/A", duration:"", oz:"4", formulaBrand:"Similac 360 Total Care", notes:"Finished full bottle" }]);
+ const [waterLog, setWaterLog] = useState([{ id:1, date:"2026-05-09", cups:3, time:"08:00" },{ id:2, date:"2026-05-09", cups:2, time:"11:00" }]);
+ const [nutritionLog, setNutritionLog] = useState([{ id:1, date:"2026-05-09", meal:"Breakfast", foods:"Oatmeal, berries", protein:"Yes", iron:"No", calcium:"Yes", notes:"" }]);
+ const [momMeds, setMomMeds] = useState([{ id:1, name:"Prenatal Vitamin", dose:"1 tablet", freq:"Daily", startDate:"2026-01-01", active:true },{ id:2, name:"Iron Supplement", dose:"65mg", freq:"Daily", startDate:"2026-03-01", active:true }]);
+ const [momHealth, setMomHealth] = useState([{ id:1, date:"2026-05-09", mood:"Good", sleep:5, painLevel:2, notes:"Feeling more rested" }]);
+ const [momVitals, setMomVitals] = useState([{ id:1, date:"2026-05-09", bp:"118/76", hr:72, temp:98.4, weight:145, notes:"Morning reading" }]);
+ const [momLabs, setMomLabs] = useState([{ id:1, date:"2026-04-01", test:"Hemoglobin", result:"11.2", unit:"g/dL", normal:"12-16", notes:"Slight anemia" }]);
+ const [cycles, setCycles] = useState([{ id:1, startDate:"2026-04-10", endDate:"2026-04-14", flow:"Medium", symptoms:"Mild cramping", notes:"" }]);
+ const [momAllergies, setMomAllergies] = useState([{ id:1, allergen:"Penicillin", category:"Medication", severity:"Severe", reaction:"Anaphylaxis", diagnosed:"2010-01-01", epiPen:"Yes", actionPlan:"No penicillin or related antibiotics. EpiPen on hand.", notes:"Confirmed allergy -- note in all medical records" }]);
+ const [momVisits, setMomVisits] = useState([{ id:1, date:"2026-04-01", doctor:"Dr. Rivera", clinic:"Women's Health Associates", reason:"6-week postpartum checkup", diagnosis:"Healing well", followUp:"Return in 3 months", medications:"", notes:"Cleared for exercise. Discussed contraception options." }]);
+ const [pumpSessions, setPumpSessions] = useState([
+ { id:1, date:"2026-05-09", time:"06:00", duration:20, leftOz:2.5, rightOz:2.5, totalOz:5, stored:"Fridge", bagLabel:"05/09 6am", notes:"Good output" },
+ { id:2, date:"2026-05-09", time:"10:00", duration:18, leftOz:2, rightOz:2, totalOz:4, stored:"Fridge", bagLabel:"05/09 10am", notes:"" },
+ { id:3, date:"2026-05-09", time:"14:00", duration:20, leftOz:2, rightOz:3, totalOz:5, stored:"Freezer", bagLabel:"05/09 2pm", notes:"Froze extra" },
+ ]);
+ const [milkInventory, setMilkInventory] = useState([
+ { id:1, oz:5, stored:"Fridge", pumped:"2026-05-09", expires:"2026-05-13", label:"05/09 6am", used:false },
+ { id:2, oz:4, stored:"Fridge", pumped:"2026-05-09", expires:"2026-05-13", label:"05/09 10am", used:false },
+ { id:3, oz:5, stored:"Freezer", pumped:"2026-05-09", expires:"2027-05-09", label:"05/09 2pm", used:false },
+ { id:4, oz:4.5, stored:"Freezer", pumped:"2026-05-08", expires:"2027-05-08", label:"05/08 pm", used:false },
+ ]);
+ const [checklistDone, setChecklistDone] = useState({});
 
-const todayWater = waterLog.filter(w => w.date === today);
-const totalCupsToday = todayWater.reduce((s, w) => s + Number(w.cups), 0);
-const waterGoal = 13;
-const waterPct = Math.min(100, Math.round((totalCupsToday / waterGoal) * 100));
+ const todayWater = waterLog.filter(w => w.date === today);
+ const totalCupsToday = todayWater.reduce((s, w) => s + Number(w.cups), 0);
+ const waterGoal = 13;
+ const waterPct = Math.min(100, Math.round((totalCupsToday / waterGoal) * 100));
 
-const [modal, setModal] = useState(null);
-const [form, setForm] = useState({});
-const [showAddKid, setShowAddKid] = useState(false);
-const [showVisitScanner, setShowVisitScanner] = useState(false);
-const [showMamaScanner, setShowMamaScanner] = useState(false);
-const [ppSection, setPpSection] = useState(null);
-const [ilSection, setIlSection] = useState(null);
-const [newKid, setNewKid] = useState({ name:””, dob:””, avatar:””, bloodType:“O+” });
-const [expandedMilestone, setExpandedMilestone]= useState(null);
-const [confirmDelete, setConfirmDelete] = useState(null);
-const [eventDetail, setEventDetail] = useState(null);
-const [showUseModal, setShowUseModal] = useState(false);
-const [useOz, setUseOz] = useState(””);
-const [useNote, setUseNote] = useState(””);
+ const [modal, setModal] = useState(null);
+ const [form, setForm] = useState({});
+ const [showAddKid, setShowAddKid] = useState(false);
+ const [showVisitScanner, setShowVisitScanner] = useState(false);
+ const [showMamaScanner, setShowMamaScanner] = useState(false);
+ const [ppSection, setPpSection] = useState(null);
+ const [ilSection, setIlSection] = useState(null);
+ const [newKid, setNewKid] = useState({ name:"", dob:"", avatar:"", bloodType:"O+" });
+ const [expandedMilestone, setExpandedMilestone]= useState(null);
+ const [confirmDelete, setConfirmDelete] = useState(null);
+ const [eventDetail, setEventDetail] = useState(null);
+ const [showUseModal, setShowUseModal] = useState(false);
+ const [useOz, setUseOz] = useState("");
+ const [useNote, setUseNote] = useState("");
 
-// Pumping computed values
-const fridgeOz = milkInventory.filter(m=>!m.used && m.stored===“Fridge”).reduce((s,m)=>s+(parseFloat(m.oz)||0),0);
-const freezerOz = milkInventory.filter(m=>!m.used && m.stored===“Freezer”).reduce((s,m)=>s+(parseFloat(m.oz)||0),0);
-const totalAvail = fridgeOz + freezerOz;
-const todayPumped = pumpSessions.filter(s=>s.date===today).reduce((s,p)=>s+(parseFloat(p.totalOz)||0),0);
+ // Pumping computed values 
+ const fridgeOz = milkInventory.filter(m=>!m.used && m.stored==="Fridge").reduce((s,m)=>s+(parseFloat(m.oz)||0),0);
+ const freezerOz = milkInventory.filter(m=>!m.used && m.stored==="Freezer").reduce((s,m)=>s+(parseFloat(m.oz)||0),0);
+ const totalAvail = fridgeOz + freezerOz;
+ const todayPumped = pumpSessions.filter(s=>s.date===today).reduce((s,p)=>s+(parseFloat(p.totalOz)||0),0);
 
-const handleUse = () => {
-let remaining = parseFloat(useOz) || 0;
-if (remaining <= 0) return;
-const sorted = […milkInventory].filter(m=>!m.used).sort((a,b)=>{
-if (a.stored===“Fridge” && b.stored===“Freezer”) return -1;
-if (a.stored===“Freezer” && b.stored===“Fridge”) return 1;
-return new Date(a.pumped)-new Date(b.pumped);
-});
-const updated = […milkInventory];
-for (const item of sorted) {
-if (remaining <= 0) break;
-const idx = updated.findIndex(m=>m.id===item.id);
-if (parseFloat(item.oz) <= remaining) {
-updated[idx] = { …updated[idx], used:true, usedDate:today, usedNote:useNote };
-remaining -= parseFloat(item.oz);
-} else {
-updated[idx] = { …updated[idx], oz:(parseFloat(item.oz)-remaining).toFixed(1) };
-remaining = 0;
-}
-}
-setMilkInventory(updated);
-setUseOz(””); setUseNote(””); setShowUseModal(false);
-};
+ const handleUse = () => {
+ let remaining = parseFloat(useOz) || 0;
+ if (remaining <= 0) return;
+ const sorted = [...milkInventory].filter(m=>!m.used).sort((a,b)=>{
+ if (a.stored==="Fridge" && b.stored==="Freezer") return -1;
+ if (a.stored==="Freezer" && b.stored==="Fridge") return 1;
+ return new Date(a.pumped)-new Date(b.pumped);
+ });
+ const updated = [...milkInventory];
+ for (const item of sorted) {
+ if (remaining <= 0) break;
+ const idx = updated.findIndex(m=>m.id===item.id);
+ if (parseFloat(item.oz) <= remaining) {
+ updated[idx] = { ...updated[idx], used:true, usedDate:today, usedNote:useNote };
+ remaining -= parseFloat(item.oz);
+ } else {
+ updated[idx] = { ...updated[idx], oz:(parseFloat(item.oz)-remaining).toFixed(1) };
+ remaining = 0;
+ }
+ }
+ setMilkInventory(updated);
+ setUseOz(""); setUseNote(""); setShowUseModal(false);
+ };
 
-// Member helpers
-const allMembers = [
-{ id: “mom”, name: “Mama”, avatar: “”, color: MEMBER_COLORS[0] },
-…kids.map((k, i) => ({ id: k.id, name: k.name, avatar: k.avatar, color: MEMBER_COLORS[i + 1] || “#999” })),
-];
+ // Member helpers 
+ const allMembers = [
+ { id: "mom", name: "Mama", avatar: "", color: MEMBER_COLORS[0] },
+ ...kids.map((k, i) => ({ id: k.id, name: k.name, avatar: k.avatar, color: MEMBER_COLORS[i + 1] || "#999" })),
+ ];
 
-const memberColor = (memberId) => allMembers.find(m => String(m.id) === String(memberId))?.color || theme.muted;
-const memberName = (memberId) => allMembers.find(m => String(m.id) === String(memberId))?.name || “Unknown”;
-const memberAvatar = (memberId) => allMembers.find(m => String(m.id) === String(memberId))?.avatar || “”;
+ const memberColor = (memberId) => allMembers.find(m => String(m.id) === String(memberId))?.color || theme.muted;
+ const memberName = (memberId) => allMembers.find(m => String(m.id) === String(memberId))?.name || "Unknown";
+ const memberAvatar = (memberId) => allMembers.find(m => String(m.id) === String(memberId))?.avatar || "";
 
-// Calendar helpers
-const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
-const firstDayOfMonth=(y, m) => new Date(y, m, 1).getDay();
+ // Calendar helpers 
+ const daysInMonth = (y, m) => new Date(y, m + 1, 0).getDate();
+ const firstDayOfMonth=(y, m) => new Date(y, m, 1).getDay();
 
-const eventsForDate = (dateStr) => {
-let ev = events.filter(e => e.date === dateStr);
-if (filterMember !== “all”) ev = ev.filter(e => String(e.memberId) === String(filterMember));
-return ev.sort((a, b) => (a.time || “”).localeCompare(b.time || “”));
-};
+ const eventsForDate = (dateStr) => {
+ let ev = events.filter(e => e.date === dateStr);
+ if (filterMember !== "all") ev = ev.filter(e => String(e.memberId) === String(filterMember));
+ return ev.sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+ };
 
-const eventsForMonth = () => {
-let ev = events.filter(e => {
-const d = new Date(e.date);
-return d.getFullYear() === calYear && d.getMonth() === calMonth;
-});
-if (filterMember !== “all”) ev = ev.filter(e => String(e.memberId) === String(filterMember));
-return ev.sort((a, b) => a.date.localeCompare(b.date) || (a.time||””).localeCompare(b.time||””));
-};
+ const eventsForMonth = () => {
+ let ev = events.filter(e => {
+ const d = new Date(e.date);
+ return d.getFullYear() === calYear && d.getMonth() === calMonth;
+ });
+ if (filterMember !== "all") ev = ev.filter(e => String(e.memberId) === String(filterMember));
+ return ev.sort((a, b) => a.date.localeCompare(b.date) || (a.time||"").localeCompare(b.time||""));
+ };
 
-const upcomingEvents = () =>
-events.filter(e => e.date >= today)
-.sort((a, b) => a.date.localeCompare(b.date) || (a.time||””).localeCompare(b.time||””))
-.slice(0, 5);
+ const upcomingEvents = () =>
+ events.filter(e => e.date >= today)
+ .sort((a, b) => a.date.localeCompare(b.date) || (a.time||"").localeCompare(b.time||""))
+ .slice(0, 5);
 
-const prevMonth = () => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y-1); } else setCalMonth(m => m-1); };
-const nextMonth = () => { if (calMonth===11) { setCalMonth(0); setCalYear(y => y+1); } else setCalMonth(m => m+1); };
+ const prevMonth = () => { if (calMonth === 0) { setCalMonth(11); setCalYear(y => y-1); } else setCalMonth(m => m-1); };
+ const nextMonth = () => { if (calMonth===11) { setCalMonth(0); setCalYear(y => y+1); } else setCalMonth(m => m+1); };
 
-const formatDate = (dateStr) => {
-if (!dateStr) return “”;
-const [y, m, d] = dateStr.split(”-”);
-return `${MONTHS[parseInt(m)-1]} ${parseInt(d)}, ${y}`;
-};
+ const formatDate = (dateStr) => {
+ if (!dateStr) return "";
+ const [y, m, d] = dateStr.split("-");
+ return `${MONTHS[parseInt(m)-1]} ${parseInt(d)}, ${y}`;
+ };
 
-const formatTime = (t) => {
-if (!t) return “”;
-const [h, min] = t.split(”:”);
-const hr = parseInt(h);
-return `${hr > 12 ? hr-12 : hr || 12}:${min} ${hr >= 12 ? "PM" : "AM"}`;
-};
+ const formatTime = (t) => {
+ if (!t) return "";
+ const [h, min] = t.split(":");
+ const hr = parseInt(h);
+ return `${hr > 12 ? hr-12 : hr || 12}:${min} ${hr >= 12 ? "PM" : "AM"}`;
+ };
 
-// CRUD data registry
-const dataMap = { symptoms, meds, visits, growth, vaccines, kidVitals, kidLabs, milestones, feedings, diapers, kidSleep, kidAllergies, kidFirsts, feedingSessions, waterLog, nutritionLog, momMeds, momHealth, momVitals, momLabs, cycles, momAllergies, pumpSessions, milkInventory, events };
-const setMap = { symptoms:setSymptoms, meds:setMeds, visits:setVisits, growth:setGrowth, vaccines:setVaccines, kidVitals:setKidVitals, kidLabs:setKidLabs, milestones:setMilestones, feedings:setFeedings, diapers:setDiapers, kidSleep:setKidSleep, kidAllergies:setKidAllergies, kidFirsts:setKidFirsts, feedingSessions:setFeedingSessions, waterLog:setWaterLog, nutritionLog:setNutritionLog, momMeds:setMomMeds, momHealth:setMomHealth, momVitals:setMomVitals, momLabs:setMomLabs, cycles:setCycles, momAllergies:setMomAllergies, momVisits:setMomVisits, pumpSessions:setPumpSessions, milkInventory:setMilkInventory, events:setEvents };
+ // CRUD data registry 
+ const dataMap = { symptoms, meds, visits, growth, vaccines, kidVitals, kidLabs, milestones, feedings, diapers, kidSleep, kidAllergies, kidFirsts, feedingSessions, waterLog, nutritionLog, momMeds, momHealth, momVitals, momLabs, cycles, momAllergies, pumpSessions, milkInventory, events };
+ const setMap = { symptoms:setSymptoms, meds:setMeds, visits:setVisits, growth:setGrowth, vaccines:setVaccines, kidVitals:setKidVitals, kidLabs:setKidLabs, milestones:setMilestones, feedings:setFeedings, diapers:setDiapers, kidSleep:setKidSleep, kidAllergies:setKidAllergies, kidFirsts:setKidFirsts, feedingSessions:setFeedingSessions, waterLog:setWaterLog, nutritionLog:setNutritionLog, momMeds:setMomMeds, momHealth:setMomHealth, momVitals:setMomVitals, momLabs:setMomLabs, cycles:setCycles, momAllergies:setMomAllergies, momVisits:setMomVisits, pumpSessions:setPumpSessions, milkInventory:setMilkInventory, events:setEvents };
 
-const openAdd = (type, fields, dataKey, kidScoped=false) => { setForm({}); setModal({ type, fields, dataKey, kidScoped, editing:false }); };
-const openEdit = (item, type, fields, dataKey, kidScoped=false) => { setForm({…item}); setModal({ type, fields, dataKey, kidScoped, editing:true, editId:item.id }); };
+ const openAdd = (type, fields, dataKey, kidScoped=false) => { setForm({}); setModal({ type, fields, dataKey, kidScoped, editing:false }); };
+ const openEdit = (item, type, fields, dataKey, kidScoped=false) => { setForm({...item}); setModal({ type, fields, dataKey, kidScoped, editing:true, editId:item.id }); };
 
-const saveEntry = () => {
-const { dataKey, kidScoped, editing, editId } = modal;
-const setFn = setMap[dataKey], arr = dataMap[dataKey];
-if (editing) { setFn(arr.map(e => e.id===editId ? {…e,…form} : e)); }
-else {
-const base = kidScoped ? { id:Date.now(), kidId:selectedKid.id, …form } : { id:Date.now(), …form };
-if (dataKey===“meds”||dataKey===“momMeds”) base.active=true;
-setFn([…arr, base]);
-}
-setModal(null); setForm({});
-};
+ const saveEntry = () => {
+ const { dataKey, kidScoped, editing, editId } = modal;
+ const setFn = setMap[dataKey], arr = dataMap[dataKey];
+ if (editing) { setFn(arr.map(e => e.id===editId ? {...e,...form} : e)); }
+ else {
+ const base = kidScoped ? { id:Date.now(), kidId:selectedKid.id, ...form } : { id:Date.now(), ...form };
+ if (dataKey==="meds"||dataKey==="momMeds") base.active=true;
+ setFn([...arr, base]);
+ }
+ setModal(null); setForm({});
+ };
 
-const deleteEntry = () => {
-const { dataKey, id } = confirmDelete;
-setMap[dataKey](dataMap[dataKey].filter(e => e.id!==id));
-setConfirmDelete(null); setEventDetail(null);
-};
+ const deleteEntry = () => {
+ const { dataKey, id } = confirmDelete;
+ setMap[dataKey](dataMap[dataKey].filter(e => e.id!==id));
+ setConfirmDelete(null); setEventDetail(null);
+ };
 
-const quickAddWater = (cups) => setWaterLog([…waterLog, { id:Date.now(), date:today, cups, time:new Date().toTimeString().slice(0,5) }]);
-const addKid = () => {
-const age = newKid.dob ? new Date().getFullYear()-new Date(newKid.dob).getFullYear() : 0;
-setKids([…kids, { id:Date.now(), …newKid, age }]);
-setShowAddKid(false); setNewKid({ name:””, dob:””, avatar:””, bloodType:“O+” });
-};
-const toggleChecklist = (cat, item) => { const key=`${cat}||${item}`; setChecklistDone(p=>({…p,[key]:!p[key]})); };
+ const quickAddWater = (cups) => setWaterLog([...waterLog, { id:Date.now(), date:today, cups, time:new Date().toTimeString().slice(0,5) }]);
+ const addKid = () => {
+ const age = newKid.dob ? new Date().getFullYear()-new Date(newKid.dob).getFullYear() : 0;
+ setKids([...kids, { id:Date.now(), ...newKid, age }]);
+ setShowAddKid(false); setNewKid({ name:"", dob:"", avatar:"", bloodType:"O+" });
+ };
+ const toggleChecklist = (cat, item) => { const key=`${cat}||${item}`; setChecklistDone(p=>({...p,[key]:!p[key]})); };
 
-// filtered per kid
-const kidSymptoms = symptoms.filter(s=>s.kidId===selectedKid.id);
-const kidMeds = meds.filter(m=>m.kidId===selectedKid.id);
-const kidVisits = visits.filter(v=>v.kidId===selectedKid.id);
-const kidGrowth = growth.filter(g=>g.kidId===selectedKid.id);
-const kidVaccineList = vaccines.filter(v=>v.kidId===selectedKid.id);
-const kidVitalsList = kidVitals.filter(v=>v.kidId===selectedKid.id);
-const kidLabsList = kidLabs.filter(l=>l.kidId===selectedKid.id);
-const kidMilestones = milestones.filter(m=>m.kidId===selectedKid.id);
-const kidFeedings = feedings.filter(f=>f.kidId===selectedKid.id);
-const kidDiapers = diapers.filter(d=>d.kidId===selectedKid.id);
-const kidSleepLog = kidSleep.filter(s=>s.kidId===selectedKid.id);
-const kidAllergyList = kidAllergies.filter(a=>a.kidId===selectedKid.id);
-const kidFirstsList = kidFirsts.filter(f=>f.kidId===selectedKid.id);
+ // filtered per kid
+ const kidSymptoms = symptoms.filter(s=>s.kidId===selectedKid.id);
+ const kidMeds = meds.filter(m=>m.kidId===selectedKid.id);
+ const kidVisits = visits.filter(v=>v.kidId===selectedKid.id);
+ const kidGrowth = growth.filter(g=>g.kidId===selectedKid.id);
+ const kidVaccineList = vaccines.filter(v=>v.kidId===selectedKid.id);
+ const kidVitalsList = kidVitals.filter(v=>v.kidId===selectedKid.id);
+ const kidLabsList = kidLabs.filter(l=>l.kidId===selectedKid.id);
+ const kidMilestones = milestones.filter(m=>m.kidId===selectedKid.id);
+ const kidFeedings = feedings.filter(f=>f.kidId===selectedKid.id);
+ const kidDiapers = diapers.filter(d=>d.kidId===selectedKid.id);
+ const kidSleepLog = kidSleep.filter(s=>s.kidId===selectedKid.id);
+ const kidAllergyList = kidAllergies.filter(a=>a.kidId===selectedKid.id);
+ const kidFirstsList = kidFirsts.filter(f=>f.kidId===selectedKid.id);
 
-// Styles
-const c = {
-app: { background:theme.bg, minHeight:“100vh”, fontFamily:”‘Inter’,‘Segoe UI’,sans-serif”, color:theme.text, display:“flex”, flexDirection:“column” },
-header: { background:”#faf8f5”, borderBottom:`1px solid ${theme.border}`, padding:“28px 24px 20px”, display:“flex”, flexDirection:“column”, alignItems:“center”, justifyContent:“center”, position:“sticky”, top:0, zIndex:100 },
-logo: { fontSize:52, fontWeight:400, letterSpacing:“0.01em”, fontFamily:”‘Cormorant Garamond’,serif”, fontStyle:“italic”, color:”#1a1a1a”, lineHeight:1.1, textAlign:“center” },
-tagline: { fontSize:10, color:”#8a8480”, letterSpacing:“0.14em”, textTransform:“uppercase”, fontFamily:”‘Inter’,sans-serif”, textAlign:“center”, marginTop:6 },
-mainTabBar: { display:“flex”, background:”#faf8f5”, borderBottom:`1px solid ${theme.border}`, padding:“0 20px”, overflowX:“auto” },
-mainTab: (a)=>({ padding:“14px 20px”, fontWeight:a?500:400, fontSize:11, letterSpacing:“0.1em”, textTransform:“uppercase”, color:a?theme.accent:theme.muted, background:“none”, border:“none”, borderBottom:`2px solid ${a?theme.accent:"transparent"}`, cursor:“pointer”, transition:“all 0.2s”, whiteSpace:“nowrap”, fontFamily:”‘Inter’,sans-serif” }),
-kidBar: { background:”#faf8f5”, borderBottom:`1px solid ${theme.border}`, padding:“10px 20px”, display:“flex”, gap:8, overflowX:“auto”, alignItems:“center” },
-kidChip: (a)=>({ display:“flex”, alignItems:“center”, gap:8, padding:“8px 18px”, borderRadius:999, background:a?theme.accent:”#ffffff”, border:`1px solid ${a?theme.accent:theme.border}`, cursor:“pointer”, whiteSpace:“nowrap”, fontSize:14, fontWeight:400, fontStyle:“italic”, fontFamily:”‘Cormorant Garamond’,serif”, color:a?”#ffffff”:theme.text, transition:“all 0.2s” }),
-addKidBtn: { padding:“7px 14px”, borderRadius:999, border:`1px solid ${theme.border}`, background:“transparent”, color:theme.muted, cursor:“pointer”, fontSize:11, whiteSpace:“nowrap”, letterSpacing:“0.06em”, textTransform:“uppercase”, fontFamily:”‘Inter’,sans-serif” },
-nav: { display:“flex”, gap:4, overflowX:“auto”, padding:“10px 20px”, background:”#faf8f5”, borderBottom:`1px solid ${theme.border}` },
-navBtn: (a)=>({ padding:“7px 16px”, borderRadius:999, background:a?theme.accent:”#ffffff”, color:a?”#ffffff”:theme.muted, border:`1px solid ${a?theme.accent:theme.border}`, cursor:“pointer”, fontSize:11, fontWeight:a?500:400, letterSpacing:“0.04em”, textTransform:“uppercase”, whiteSpace:“nowrap”, display:“flex”, alignItems:“center”, gap:4, transition:“all 0.2s”, fontFamily:”‘Inter’,sans-serif” }),
-main: { flex:1, padding:24, maxWidth:960, margin:“0 auto”, width:“100%”, boxSizing:“border-box” },
-card: { background:”#ffffff”, border:`1px solid ${theme.border}`, borderRadius:6, padding:20, marginBottom:12, boxShadow:“none” },
-sTitle: { fontSize:10, fontWeight:500, letterSpacing:“0.14em”, textTransform:“uppercase”, color:theme.muted, marginBottom:14, fontFamily:”‘Inter’,sans-serif” },
-statGrid: { display:“grid”, gridTemplateColumns:“repeat(3,1fr)”, gap:8, marginBottom:16 },
-stat: (col)=>({ background:`${col}0a`, border:`1px solid ${col}1a`, borderRadius:6, padding:“10px 12px”, cursor:“pointer”, transition:“all 0.15s” }),
-statNum: { fontSize:22, fontWeight:300, lineHeight:1, fontFamily:”‘Inter’,sans-serif”, letterSpacing:”-0.02em” },
-statLabel: { fontSize:9, color:theme.muted, marginTop:4, letterSpacing:“0.06em”, textTransform:“uppercase”, fontFamily:”‘Inter’,sans-serif” },
-row: { display:“flex”, justifyContent:“space-between”, alignItems:“center”, padding:“13px 0”, borderBottom:`1px solid ${theme.border}` },
-badge: (col)=>({ display:“inline-block”, padding:“3px 10px”, borderRadius:3, background:`${col}14`, color:col, fontSize:10, fontWeight:500, border:`1px solid ${col}33`, letterSpacing:“0.05em”, textTransform:“uppercase”, fontFamily:”‘Inter’,sans-serif” }),
-btn: (col=theme.accent)=>({ padding:“10px 22px”, borderRadius:4, background:col, color:”#fff”, border:“none”, cursor:“pointer”, fontSize:11, fontWeight:500, letterSpacing:“0.06em”, textTransform:“uppercase”, boxShadow:“none”, whiteSpace:“nowrap”, fontFamily:”‘Inter’,sans-serif” }),
-ghostBtn: { padding:“10px 18px”, borderRadius:4, background:“transparent”, color:theme.accent, border:`1px solid ${theme.accent}`, cursor:“pointer”, fontSize:11, fontWeight:500, letterSpacing:“0.06em”, textTransform:“uppercase”, fontFamily:”‘Inter’,sans-serif” },
-smallBtn: (col=theme.accent)=>({ padding:“6px 14px”, borderRadius:4, background:`${col}12`, color:col, border:`1px solid ${col}33`, cursor:“pointer”, fontSize:11, fontWeight:500, letterSpacing:“0.04em”, textTransform:“uppercase”, fontFamily:”‘Inter’,sans-serif” }),
-iconBtn: (col=theme.muted)=>({ background:“none”, border:“none”, cursor:“pointer”, color:col, fontSize:16, padding:“4px 8px”, borderRadius:8 }),
-input: { background:”#faf8f5”, border:`1px solid ${theme.border}`, borderRadius:6, padding:“10px 14px”, color:theme.text, fontSize:14, width:“100%”, outline:“none”, boxSizing:“border-box” },
-label: { fontSize:10, color:theme.muted, marginBottom:5, display:“block”, fontWeight:500, letterSpacing:“0.08em”, textTransform:“uppercase”, fontFamily:”‘Inter’,sans-serif” },
-overlay: { position:“fixed”, inset:0, background:“rgba(20,18,16,0.55)”, display:“flex”, alignItems:“center”, justifyContent:“center”, zIndex:200, padding:24, backdropFilter:“blur(4px)” },
-modalBox: { background:”#ffffff”, border:`1px solid ${theme.border}`, borderRadius:6, padding:28, width:“100%”, maxWidth:480, boxShadow:“0 8px 32px rgba(0,0,0,0.1)”, maxHeight:“90vh”, overflowY:“auto” },
-tipCard: (col=theme.accent)=>({ background:”#fff”, border:`1px solid ${theme.border}`, borderLeft:`4px solid ${col}`, borderRadius:6, padding:16, marginBottom:12, display:“flex”, gap:14, alignItems:“flex-start” }),
-checkItem: { display:“flex”, alignItems:“flex-start”, gap:12, padding:“10px 0”, borderBottom:`1px solid ${theme.border}`, cursor:“pointer” },
-checkBox: (done)=>({ width:22, height:22, borderRadius:6, border:`2px solid ${done?theme.green:theme.border}`, background:done?theme.green:“transparent”, flexShrink:0, display:“flex”, alignItems:“center”, justifyContent:“center”, fontSize:12, color:”#fff”, marginTop:1 }),
-};
+ // Styles 
+ const c = {
+ app: { background:theme.bg, minHeight:"100vh", fontFamily:"'Inter','Segoe UI',sans-serif", color:theme.text, display:"flex", flexDirection:"column" },
+ header: { background:"#faf8f5", borderBottom:`1px solid ${theme.border}`, padding:"28px 24px 20px", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", position:"sticky", top:0, zIndex:100 },
+ logo: { fontSize:52, fontWeight:400, letterSpacing:"0.01em", fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", color:"#1a1a1a", lineHeight:1.1, textAlign:"center" },
+ tagline: { fontSize:10, color:"#8a8480", letterSpacing:"0.14em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif", textAlign:"center", marginTop:6 },
+ mainTabBar: { display:"flex", background:"#faf8f5", borderBottom:`1px solid ${theme.border}`, padding:"0 20px", overflowX:"auto" },
+ mainTab: (a)=>({ padding:"14px 20px", fontWeight:a?500:400, fontSize:11, letterSpacing:"0.1em", textTransform:"uppercase", color:a?theme.accent:theme.muted, background:"none", border:"none", borderBottom:`2px solid ${a?theme.accent:"transparent"}`, cursor:"pointer", transition:"all 0.2s", whiteSpace:"nowrap", fontFamily:"'Inter',sans-serif" }),
+ kidBar: { background:"#faf8f5", borderBottom:`1px solid ${theme.border}`, padding:"10px 20px", display:"flex", gap:8, overflowX:"auto", alignItems:"center" },
+ kidChip: (a)=>({ display:"flex", alignItems:"center", gap:8, padding:"8px 18px", borderRadius:999, background:a?theme.accent:"#ffffff", border:`1px solid ${a?theme.accent:theme.border}`, cursor:"pointer", whiteSpace:"nowrap", fontSize:14, fontWeight:400, fontStyle:"italic", fontFamily:"'Cormorant Garamond',serif", color:a?"#ffffff":theme.text, transition:"all 0.2s" }),
+ addKidBtn: { padding:"7px 14px", borderRadius:999, border:`1px solid ${theme.border}`, background:"transparent", color:theme.muted, cursor:"pointer", fontSize:11, whiteSpace:"nowrap", letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" },
+ nav: { display:"flex", gap:4, overflowX:"auto", padding:"10px 20px", background:"#faf8f5", borderBottom:`1px solid ${theme.border}` },
+ navBtn: (a)=>({ padding:"7px 16px", borderRadius:999, background:a?theme.accent:"#ffffff", color:a?"#ffffff":theme.muted, border:`1px solid ${a?theme.accent:theme.border}`, cursor:"pointer", fontSize:11, fontWeight:a?500:400, letterSpacing:"0.04em", textTransform:"uppercase", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:4, transition:"all 0.2s", fontFamily:"'Inter',sans-serif" }),
+ main: { flex:1, padding:24, maxWidth:960, margin:"0 auto", width:"100%", boxSizing:"border-box" },
+ card: { background:"#ffffff", border:`1px solid ${theme.border}`, borderRadius:6, padding:20, marginBottom:12, boxShadow:"none" },
+ sTitle: { fontSize:10, fontWeight:500, letterSpacing:"0.14em", textTransform:"uppercase", color:theme.muted, marginBottom:14, fontFamily:"'Inter',sans-serif" },
+ statGrid: { display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:16 },
+ stat: (col)=>({ background:`${col}0a`, border:`1px solid ${col}1a`, borderRadius:6, padding:"10px 12px", cursor:"pointer", transition:"all 0.15s" }),
+ statNum: { fontSize:22, fontWeight:300, lineHeight:1, fontFamily:"'Inter',sans-serif", letterSpacing:"-0.02em" },
+ statLabel: { fontSize:9, color:theme.muted, marginTop:4, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" },
+ row: { display:"flex", justifyContent:"space-between", alignItems:"center", padding:"13px 0", borderBottom:`1px solid ${theme.border}` },
+ badge: (col)=>({ display:"inline-block", padding:"3px 10px", borderRadius:3, background:`${col}14`, color:col, fontSize:10, fontWeight:500, border:`1px solid ${col}33`, letterSpacing:"0.05em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" }),
+ btn: (col=theme.accent)=>({ padding:"10px 22px", borderRadius:4, background:col, color:"#fff", border:"none", cursor:"pointer", fontSize:11, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", boxShadow:"none", whiteSpace:"nowrap", fontFamily:"'Inter',sans-serif" }),
+ ghostBtn: { padding:"10px 18px", borderRadius:4, background:"transparent", color:theme.accent, border:`1px solid ${theme.accent}`, cursor:"pointer", fontSize:11, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" },
+ smallBtn: (col=theme.accent)=>({ padding:"6px 14px", borderRadius:4, background:`${col}12`, color:col, border:`1px solid ${col}33`, cursor:"pointer", fontSize:11, fontWeight:500, letterSpacing:"0.04em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" }),
+ iconBtn: (col=theme.muted)=>({ background:"none", border:"none", cursor:"pointer", color:col, fontSize:16, padding:"4px 8px", borderRadius:8 }),
+ input: { background:"#faf8f5", border:`1px solid ${theme.border}`, borderRadius:6, padding:"10px 14px", color:theme.text, fontSize:14, width:"100%", outline:"none", boxSizing:"border-box" },
+ label: { fontSize:10, color:theme.muted, marginBottom:5, display:"block", fontWeight:500, letterSpacing:"0.08em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" },
+ overlay: { position:"fixed", inset:0, background:"rgba(20,18,16,0.55)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:24, backdropFilter:"blur(4px)" },
+ modalBox: { background:"#ffffff", border:`1px solid ${theme.border}`, borderRadius:6, padding:28, width:"100%", maxWidth:480, boxShadow:"0 8px 32px rgba(0,0,0,0.1)", maxHeight:"90vh", overflowY:"auto" },
+ tipCard: (col=theme.accent)=>({ background:"#fff", border:`1px solid ${theme.border}`, borderLeft:`4px solid ${col}`, borderRadius:6, padding:16, marginBottom:12, display:"flex", gap:14, alignItems:"flex-start" }),
+ checkItem: { display:"flex", alignItems:"flex-start", gap:12, padding:"10px 0", borderBottom:`1px solid ${theme.border}`, cursor:"pointer" },
+ checkBox: (done)=>({ width:22, height:22, borderRadius:6, border:`2px solid ${done?theme.green:theme.border}`, background:done?theme.green:"transparent", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color:"#fff", marginTop:1 }),
+ };
 
-// Shared components
-// Components moved outside App for stable identity (fixes keyboard dismiss)
+ // Shared components 
+ // Components moved outside App for stable identity (fixes keyboard dismiss) 
 
-const VitalsCard = ({ vital, dataKey, fields, kidScoped }) => (
-<EntryCard item={vital} dataKey={dataKey} label={`Vitals ${vital.date}`} fields={fields} kidScoped={kidScoped} openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c}>
-
- <div style={{ fontSize:13, color:theme.muted, marginBottom:12 }}>{vital.date}{vital.notes?` · ${vital.notes}`:""}</div>
+ const VitalsCard = ({ vital, dataKey, fields, kidScoped }) => (
+ <EntryCard item={vital} dataKey={dataKey} label={`Vitals ${vital.date}`} fields={fields} kidScoped={kidScoped} openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c}>
+ <div style={{ fontSize:13, color:theme.muted, marginBottom:12 }}>{vital.date}{vital.notes?` . ${vital.notes}`:""}</div>
  <div style={{ display:"flex", flexWrap:"wrap", gap:16 }}>
- {vital.temp && <div><div style={{ fontSize:22, fontWeight:500, color:theme.coral }}>{vital.temp}°F</div><div style={{ fontSize:11, color:theme.muted }}>Temp</div></div>}
+ {vital.temp && <div><div style={{ fontSize:22, fontWeight:500, color:theme.coral }}>{vital.temp} degreesF</div><div style={{ fontSize:11, color:theme.muted }}>Temp</div></div>}
  {vital.hr && <div><div style={{ fontSize:22, fontWeight:500, color:theme.accent }}>{vital.hr} bpm</div><div style={{ fontSize:11, color:theme.muted }}>HR</div></div>}
  {vital.bp && <div><div style={{ fontSize:22, fontWeight:500, color:theme.purple }}>{vital.bp}</div><div style={{ fontSize:11, color:theme.muted }}>BP</div></div>}
  {vital.rr && <div><div style={{ fontSize:22, fontWeight:500, color:theme.blue }}>{vital.rr}</div><div style={{ fontSize:11, color:theme.muted }}>RR</div></div>}
@@ -1444,123 +1425,121 @@ const VitalsCard = ({ vital, dataKey, fields, kidScoped }) => (
  </EntryCard>
  );
 
-const LabCard = ({ lab, dataKey, fields, kidScoped }) => (
-<EntryCard item={lab} dataKey={dataKey} label={lab.test} fields={fields} kidScoped={kidScoped} openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c}>
-
+ const LabCard = ({ lab, dataKey, fields, kidScoped }) => (
+ <EntryCard item={lab} dataKey={dataKey} label={lab.test} fields={fields} kidScoped={kidScoped} openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c}>
  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
  <div style={{ fontWeight:500 }}> {lab.test}</div>
  <span style={c.badge(theme.blue)}>{lab.result} {lab.unit}</span>
  </div>
- <div style={{ fontSize:13, color:theme.muted }}>{lab.date} · Normal: {lab.normal}</div>
+ <div style={{ fontSize:13, color:theme.muted }}>{lab.date} . Normal: {lab.normal}</div>
  {lab.notes && <div style={{ fontSize:13, marginTop:6 }}>{lab.notes}</div>}
  </EntryCard>
  );
 
-// Field definitions
-const memberOptions = allMembers.map(m => m.name);
-const memberIdFromOption = (opt) => { const m = allMembers.find(m => m.name === opt); return m ? m.id : “mom”; };
-const memberOptionFromId = (id) => { const m = allMembers.find(m => String(m.id) === String(id)); return m ? m.name : “”; };
+ // Field definitions 
+ const memberOptions = allMembers.map(m => m.name);
+ const memberIdFromOption = (opt) => { const m = allMembers.find(m => m.name === opt); return m ? m.id : "mom"; };
+ const memberOptionFromId = (id) => { const m = allMembers.find(m => String(m.id) === String(id)); return m ? m.name : ""; };
 
-const eventFields = [
-{ label:“For”, field:”_memberLabel”, options: memberOptions },
-{ label:“Event Title”, field:“title” },
-{ label:“Date”, field:“date”, type:“date” },
-{ label:“Time”, field:“time”, type:“time” },
-{ label:“Type”, field:“type”, options: EVENT_TYPES },
-{ label:“Location / Doctor”, field:“location” },
-{ label:“Notes”, field:“notes” },
-];
+ const eventFields = [
+ { label:"For", field:"_memberLabel", options: memberOptions },
+ { label:"Event Title", field:"title" },
+ { label:"Date", field:"date", type:"date" },
+ { label:"Time", field:"time", type:"time" },
+ { label:"Type", field:"type", options: EVENT_TYPES },
+ { label:"Location / Doctor", field:"location" },
+ { label:"Notes", field:"notes" },
+ ];
 
-const saveEvent = () => {
-const memberId = memberIdFromOption(form._memberLabel) ?? form.memberId;
-const entry = { id: modal?.editing ? modal.editId : Date.now(), memberId, title:form.title, date:form.date, time:form.time, type:form.type, location:form.location, notes:form.notes };
-if (modal?.editing) setEvents(events.map(e => e.id===modal.editId ? entry : e));
-else setEvents([…events, entry]);
-setModal(null); setForm({});
-};
+ const saveEvent = () => {
+ const memberId = memberIdFromOption(form._memberLabel) ?? form.memberId;
+ const entry = { id: modal?.editing ? modal.editId : Date.now(), memberId, title:form.title, date:form.date, time:form.time, type:form.type, location:form.location, notes:form.notes };
+ if (modal?.editing) setEvents(events.map(e => e.id===modal.editId ? entry : e));
+ else setEvents([...events, entry]);
+ setModal(null); setForm({});
+ };
 
-const openAddEvent = (prefillDate=null) => {
-setForm(prefillDate ? { date: prefillDate } : {});
-setModal({ type:“event”, fields: eventFields, dataKey:“events”, editing:false, isEvent:true });
-};
+ const openAddEvent = (prefillDate=null) => {
+ setForm(prefillDate ? { date: prefillDate } : {});
+ setModal({ type:"event", fields: eventFields, dataKey:"events", editing:false, isEvent:true });
+ };
 
-const openEditEvent = (ev) => {
-setForm({ …ev, _memberLabel: memberOptionFromId(ev.memberId) });
-setModal({ type:“event”, fields: eventFields, dataKey:“events”, editing:true, editId:ev.id, isEvent:true });
-};
+ const openEditEvent = (ev) => {
+ setForm({ ...ev, _memberLabel: memberOptionFromId(ev.memberId) });
+ setModal({ type:"event", fields: eventFields, dataKey:"events", editing:true, editId:ev.id, isEvent:true });
+ };
 
-const F = {
-symptom: [{ label:“Date”, field:“date”, type:“date” },{ label:“Symptom”, field:“symptom” },{ label:“Severity”, field:“severity”, options:[“Mild”,“Moderate”,“Severe”] },{ label:“Notes”, field:“notes” }],
-med: [{ label:“Medication Name”, field:“name” },{ label:“Dose”, field:“dose” },{ label:“Frequency”, field:“freq” },{ label:“Start Date”, field:“startDate”, type:“date” }],
-visit: [{ label:“Date”, field:“date”, type:“date” },{ label:“Doctor”, field:“doctor” },{ label:“Reason for Visit”, field:“reason” },{ label:“Notes”, field:“notes” }],
-growth: [{ label:“Date”, field:“date”, type:“date” },{ label:“Height (cm)”, field:“height”, type:“number” },{ label:“Weight (kg)”, field:“weight”, type:“number” },{ label:“Head Circumference (cm)”, field:“headCirc”, type:“number” }],
-vaccine: [{ label:“Vaccine / Medication Name”, field:“name” },{ label:“Date Given”, field:“date”, type:“date” },{ label:“Given By (clinic/doctor)”, field:“doctor” },{ label:“Lot Number (optional)”, field:“lot” },{ label:“Notes”, field:“notes” }],
-kidVital: [{ label:“Date”, field:“date”, type:“date” },{ label:“Temp (°F)”, field:“temp”, type:“number” },{ label:“Heart Rate (bpm)”, field:“hr”, type:“number” },{ label:“Resp Rate”, field:“rr”, type:“number” },{ label:“Blood Pressure (e.g. 90/60)”, field:“bp” },{ label:“O2 Sat (%)”, field:“o2”, type:“number” },{ label:“Notes”, field:“notes” }],
-kidLab: [{ label:“Date”, field:“date”, type:“date” },{ label:“Test Name”, field:“test” },{ label:“Result”, field:“result” },{ label:“Unit”, field:“unit” },{ label:“Normal Range”, field:“normal” },{ label:“Notes”, field:“notes” }],
-milestone: [{ label:“Age Group”, field:“age”, options:Object.keys(milestoneData) },{ label:“Category”, field:“category”, options:[” Social & Emotional”,” Language & Communication”,” Cognitive”,” Physical & Movement”] },{ label:“Milestone”, field:“milestone” },{ label:“Date Achieved”, field:“date”, type:“date” },{ label:“Notes”, field:“notes” }],
-feeding: [{ label:“Date”, field:“date”, type:“date” },{ label:“Time”, field:“time”, type:“time” },{ label:“Type”, field:“type”, options:[“Breast”,“Bottle”,“Formula”,“Solids”] },{ label:“Amount”, field:“amount” },{ label:“Notes”, field:“notes” }],
-diaper: [{ label:“Date”, field:“date”, type:“date” },{ label:“Time”, field:“time”, type:“time” },{ label:“Type”, field:“type”, options:[“Wet”,“Dirty”,“Both”,“Dry”] },{ label:“Notes”, field:“notes” }],
-kidSleep: [{ label:“Date”, field:“date”, type:“date” },{ label:“Type”, field:“type”, options:[“Nap”,“Nighttime Sleep”] },{ label:“Start Time”, field:“start”, type:“time” },{ label:“End Time”, field:“end”, type:“time” },{ label:“Duration (minutes)”, field:“duration”, type:“number” },{ label:“Notes”, field:“notes” }],
-momFeeding:[{ label:“Date”, field:“date”, type:“date” },{ label:“Time”, field:“time”, type:“time” },{ label:“Feeding Type”, field:“type”, options:[“Breastfeed”,“Formula Bottle”,“Breast Milk Bottle”,“Combination”] },{ label:“Side (if breastfeeding)”, field:“side”, options:[“Left”,“Right”,“Both”,“N/A”] },{ label:“Formula Brand (if formula)”, field:“formulaBrand” },{ label:“Amount in oz (if bottle)”, field:“oz”, type:“number” },{ label:“Duration (mins)”, field:“duration”, type:“number” },{ label:“Notes”, field:“notes” }],
-water: [{ label:“Cups”, field:“cups”, type:“number” },{ label:“Time”, field:“time”, type:“time” }],
-nutrition: [{ label:“Meal”, field:“meal”, options:[“Breakfast”,“Lunch”,“Dinner”,“Snack”] },{ label:“Foods Eaten”, field:“foods” },{ label:“Protein?”, field:“protein”, options:[“Yes”,“No”] },{ label:“Iron-rich?”, field:“iron”, options:[“Yes”,“No”] },{ label:“Calcium?”, field:“calcium”, options:[“Yes”,“No”] },{ label:“Notes”, field:“notes” }],
-momMed: [{ label:“Medication Name”, field:“name” },{ label:“Dose”, field:“dose” },{ label:“Frequency”, field:“freq” },{ label:“Start Date”, field:“startDate”, type:“date” }],
-momHealth: [{ label:“Mood”, field:“mood”, options:[“Great”,“Good”,“Okay”,“Struggling”] },{ label:“Sleep (hours)”, field:“sleep”, type:“number” },{ label:“Pain Level (0–10)”, field:“painLevel”, type:“number” },{ label:“Notes”, field:“notes” }],
-momVital: [{ label:“Blood Pressure”, field:“bp” },{ label:“Heart Rate (bpm)”, field:“hr”, type:“number” },{ label:“Temperature (°F)”, field:“temp”, type:“number” },{ label:“Weight (lbs)”, field:“weight”, type:“number” },{ label:“Notes”, field:“notes” }],
-momLab: [{ label:“Date”, field:“date”, type:“date” },{ label:“Test Name”, field:“test” },{ label:“Result”, field:“result” },{ label:“Unit”, field:“unit” },{ label:“Normal Range”, field:“normal” },{ label:“Notes”, field:“notes” }],
-cycle: [{ label:“Start Date”, field:“startDate”, type:“date” },{ label:“End Date”, field:“endDate”, type:“date” },{ label:“Flow”, field:“flow”, options:[“Light”,“Medium”,“Heavy”] },{ label:“Symptoms”, field:“symptoms” },{ label:“Notes”, field:“notes” }],
-kidAllergy:[{ label:“Allergen”, field:“allergen” },{ label:“Category”, field:“category”, options:[“Food”,“Medication”,“Environmental”,“Insect/Sting”,“Contact/Skin”,“Pet”,“Other”] },{ label:“Severity”, field:“severity”, options:[“Mild”,“Moderate”,“Severe — Anaphylaxis Risk”] },{ label:“Reaction / Symptoms”, field:“reaction” },{ label:“Date Diagnosed”, field:“diagnosed”, type:“date” },{ label:“EpiPen Prescribed?”, field:“epiPen”, options:[“Yes”,“No”] },{ label:“Action Plan”, field:“actionPlan” },{ label:“Notes”, field:“notes” }],
-momAllergy: [{ label:“Allergen”, field:“allergen” },{ label:“Category”, field:“category”, options:[“Food”,“Medication”,“Environmental”,“Insect/Sting”,“Contact/Skin”,“Pet”,“Latex”,“Other”] },{ label:“Severity”, field:“severity”, options:[“Mild”,“Moderate”,“Severe — Anaphylaxis Risk”] },{ label:“Reaction / Symptoms”, field:“reaction” },{ label:“Date Diagnosed”, field:“diagnosed”, type:“date” },{ label:“EpiPen Prescribed?”, field:“epiPen”, options:[“Yes”,“No”] },{ label:“Action Plan”, field:“actionPlan” },{ label:“Notes”, field:“notes” }],
-pumpSession:[{ label:“Date”, field:“date”, type:“date” },{ label:“Time”, field:“time”, type:“time” },{ label:“Duration (mins)”, field:“duration”, type:“number” },{ label:“Left Side (oz)”, field:“leftOz”, type:“number” },{ label:“Right Side (oz)”, field:“rightOz”, type:“number” },{ label:“Total oz”, field:“totalOz”, type:“number” },{ label:“Storage”, field:“stored”, options:[“Fridge”,“Freezer”,“Used Fresh”,“Donated”] },{ label:“Bag/Container Label”, field:“bagLabel” },{ label:“Notes”, field:“notes” }],
-milkEntry: [{ label:“oz Amount”, field:“oz”, type:“number” },{ label:“Storage”, field:“stored”, options:[“Fridge”,“Freezer”] },{ label:“Date Pumped”, field:“pumped”, type:“date” },{ label:“Expiry Date”, field:“expires”, type:“date” },{ label:“Label”, field:“label” }],
-first: [{ label:“What was the First? “, field:“title” },{ label:“Category”, field:“category”, options:[“Movement”,“Feeding”,“Communication”,“Social”,“Sleep”,“Health & Body”,“Experiences”,“Personality”,“Other”] },{ label:“Date”, field:“date”, type:“date” },{ label:“Age at time”, field:“ageAtTime” },{ label:“Who was there?”, field:“witnesses” },{ label:“Describe the moment “, field:“story” },{ label:“How did YOU feel?”, field:“momFeeling” }],
-};
+ const F = {
+ symptom: [{ label:"Date", field:"date", type:"date" },{ label:"Symptom", field:"symptom" },{ label:"Severity", field:"severity", options:["Mild","Moderate","Severe"] },{ label:"Notes", field:"notes" }],
+ med: [{ label:"Medication Name", field:"name" },{ label:"Dose", field:"dose" },{ label:"Frequency", field:"freq" },{ label:"Start Date", field:"startDate", type:"date" }],
+ visit: [{ label:"Date", field:"date", type:"date" },{ label:"Doctor", field:"doctor" },{ label:"Reason for Visit", field:"reason" },{ label:"Notes", field:"notes" }],
+ growth: [{ label:"Date", field:"date", type:"date" },{ label:"Height (cm)", field:"height", type:"number" },{ label:"Weight (kg)", field:"weight", type:"number" },{ label:"Head Circumference (cm)", field:"headCirc", type:"number" }],
+ vaccine: [{ label:"Vaccine / Medication Name", field:"name" },{ label:"Date Given", field:"date", type:"date" },{ label:"Given By (clinic/doctor)", field:"doctor" },{ label:"Lot Number (optional)", field:"lot" },{ label:"Notes", field:"notes" }],
+ kidVital: [{ label:"Date", field:"date", type:"date" },{ label:"Temp ( degreesF)", field:"temp", type:"number" },{ label:"Heart Rate (bpm)", field:"hr", type:"number" },{ label:"Resp Rate", field:"rr", type:"number" },{ label:"Blood Pressure (e.g. 90/60)", field:"bp" },{ label:"O2 Sat (%)", field:"o2", type:"number" },{ label:"Notes", field:"notes" }],
+ kidLab: [{ label:"Date", field:"date", type:"date" },{ label:"Test Name", field:"test" },{ label:"Result", field:"result" },{ label:"Unit", field:"unit" },{ label:"Normal Range", field:"normal" },{ label:"Notes", field:"notes" }],
+ milestone: [{ label:"Age Group", field:"age", options:Object.keys(milestoneData) },{ label:"Category", field:"category", options:[" Social & Emotional"," Language & Communication"," Cognitive"," Physical & Movement"] },{ label:"Milestone", field:"milestone" },{ label:"Date Achieved", field:"date", type:"date" },{ label:"Notes", field:"notes" }],
+ feeding: [{ label:"Date", field:"date", type:"date" },{ label:"Time", field:"time", type:"time" },{ label:"Type", field:"type", options:["Breast","Bottle","Formula","Solids"] },{ label:"Amount", field:"amount" },{ label:"Notes", field:"notes" }],
+ diaper: [{ label:"Date", field:"date", type:"date" },{ label:"Time", field:"time", type:"time" },{ label:"Type", field:"type", options:["Wet","Dirty","Both","Dry"] },{ label:"Notes", field:"notes" }],
+ kidSleep: [{ label:"Date", field:"date", type:"date" },{ label:"Type", field:"type", options:["Nap","Nighttime Sleep"] },{ label:"Start Time", field:"start", type:"time" },{ label:"End Time", field:"end", type:"time" },{ label:"Duration (minutes)", field:"duration", type:"number" },{ label:"Notes", field:"notes" }],
+ momFeeding:[{ label:"Date", field:"date", type:"date" },{ label:"Time", field:"time", type:"time" },{ label:"Feeding Type", field:"type", options:["Breastfeed","Formula Bottle","Breast Milk Bottle","Combination"] },{ label:"Side (if breastfeeding)", field:"side", options:["Left","Right","Both","N/A"] },{ label:"Formula Brand (if formula)", field:"formulaBrand" },{ label:"Amount in oz (if bottle)", field:"oz", type:"number" },{ label:"Duration (mins)", field:"duration", type:"number" },{ label:"Notes", field:"notes" }],
+ water: [{ label:"Cups", field:"cups", type:"number" },{ label:"Time", field:"time", type:"time" }],
+ nutrition: [{ label:"Meal", field:"meal", options:["Breakfast","Lunch","Dinner","Snack"] },{ label:"Foods Eaten", field:"foods" },{ label:"Protein?", field:"protein", options:["Yes","No"] },{ label:"Iron-rich?", field:"iron", options:["Yes","No"] },{ label:"Calcium?", field:"calcium", options:["Yes","No"] },{ label:"Notes", field:"notes" }],
+ momMed: [{ label:"Medication Name", field:"name" },{ label:"Dose", field:"dose" },{ label:"Frequency", field:"freq" },{ label:"Start Date", field:"startDate", type:"date" }],
+ momHealth: [{ label:"Mood", field:"mood", options:["Great","Good","Okay","Struggling"] },{ label:"Sleep (hours)", field:"sleep", type:"number" },{ label:"Pain Level (0-10)", field:"painLevel", type:"number" },{ label:"Notes", field:"notes" }],
+ momVital: [{ label:"Blood Pressure", field:"bp" },{ label:"Heart Rate (bpm)", field:"hr", type:"number" },{ label:"Temperature ( degreesF)", field:"temp", type:"number" },{ label:"Weight (lbs)", field:"weight", type:"number" },{ label:"Notes", field:"notes" }],
+ momLab: [{ label:"Date", field:"date", type:"date" },{ label:"Test Name", field:"test" },{ label:"Result", field:"result" },{ label:"Unit", field:"unit" },{ label:"Normal Range", field:"normal" },{ label:"Notes", field:"notes" }],
+ cycle: [{ label:"Start Date", field:"startDate", type:"date" },{ label:"End Date", field:"endDate", type:"date" },{ label:"Flow", field:"flow", options:["Light","Medium","Heavy"] },{ label:"Symptoms", field:"symptoms" },{ label:"Notes", field:"notes" }],
+ kidAllergy:[{ label:"Allergen", field:"allergen" },{ label:"Category", field:"category", options:["Food","Medication","Environmental","Insect/Sting","Contact/Skin","Pet","Other"] },{ label:"Severity", field:"severity", options:["Mild","Moderate","Severe -- Anaphylaxis Risk"] },{ label:"Reaction / Symptoms", field:"reaction" },{ label:"Date Diagnosed", field:"diagnosed", type:"date" },{ label:"EpiPen Prescribed?", field:"epiPen", options:["Yes","No"] },{ label:"Action Plan", field:"actionPlan" },{ label:"Notes", field:"notes" }],
+ momAllergy: [{ label:"Allergen", field:"allergen" },{ label:"Category", field:"category", options:["Food","Medication","Environmental","Insect/Sting","Contact/Skin","Pet","Latex","Other"] },{ label:"Severity", field:"severity", options:["Mild","Moderate","Severe -- Anaphylaxis Risk"] },{ label:"Reaction / Symptoms", field:"reaction" },{ label:"Date Diagnosed", field:"diagnosed", type:"date" },{ label:"EpiPen Prescribed?", field:"epiPen", options:["Yes","No"] },{ label:"Action Plan", field:"actionPlan" },{ label:"Notes", field:"notes" }],
+ pumpSession:[{ label:"Date", field:"date", type:"date" },{ label:"Time", field:"time", type:"time" },{ label:"Duration (mins)", field:"duration", type:"number" },{ label:"Left Side (oz)", field:"leftOz", type:"number" },{ label:"Right Side (oz)", field:"rightOz", type:"number" },{ label:"Total oz", field:"totalOz", type:"number" },{ label:"Storage", field:"stored", options:["Fridge","Freezer","Used Fresh","Donated"] },{ label:"Bag/Container Label", field:"bagLabel" },{ label:"Notes", field:"notes" }],
+ milkEntry: [{ label:"oz Amount", field:"oz", type:"number" },{ label:"Storage", field:"stored", options:["Fridge","Freezer"] },{ label:"Date Pumped", field:"pumped", type:"date" },{ label:"Expiry Date", field:"expires", type:"date" },{ label:"Label", field:"label" }],
+ first: [{ label:"What was the First? ", field:"title" },{ label:"Category", field:"category", options:["Movement","Feeding","Communication","Social","Sleep","Health & Body","Experiences","Personality","Other"] },{ label:"Date", field:"date", type:"date" },{ label:"Age at time", field:"ageAtTime" },{ label:"Who was there?", field:"witnesses" },{ label:"Describe the moment ", field:"story" },{ label:"How did YOU feel?", field:"momFeeling" }],
+ };
 
-const kidNavItems = [
-{ id:“dashboard”,  icon:””, label:“Dashboard”   },
-{ id:“kidTrends”,  icon:””, label:“Trends”       },
-{ id:“symptoms”,   icon:””, label:“Symptoms”     },
-{ id:“medications”,icon:””, label:“Meds”         },
-{ id:“visits”,     icon:””, label:“Visits”       },
-{ id:“growth”,     icon:””, label:“Growth”       },
-{ id:“vaccines”,   icon:””, label:“Vaccines”     },
-{ id:“vitals”,     icon:””, label:“Vitals & Labs”},
-{ id:“allergies”,  icon:””, label:“Allergies”    },
-{ id:“milestones”, icon:””, label:“Milestones”   },
-…(selectedKid.age < 5 ? [{ id:“firsts”, icon:””, label:“Firsts” }] : []),
-{ id:“infantLog”,  icon:””, label:“Infant Log”   },
-{ id:“kidSleepTab”,icon:””, label:“Sleep”        },
-{ id:“tips”,       icon:””, label:“Nurse Tips”   },
-{ id:“kidReports”, icon:””, label:“Reports”      },
-];
-const momNavItems = [
-{ id:“momDashboard”, icon:””, label:“Dashboard”   },
-{ id:“momTrends”,    icon:””, label:“Trends”       },
-{ id:“feeding”,      icon:””, label:“Feeding”      },
-{ id:“pumping”,      icon:””, label:“Pumping”      },
-{ id:“hydration”,    icon:””, label:“Hydration”    },
-{ id:“nutrition”,    icon:””, label:“Nutrition”    },
-{ id:“cycle”,        icon:””, label:“Cycle”        },
-{ id:“momVitalsTab”, icon:””, label:“Vitals & Labs”},
-{ id:“momMeds”,      icon:””, label:“My Meds”      },
-{ id:“momAllergies”, icon:””, label:“Allergies”    },
-{ id:“momVisits”,    icon:””, label:“My Visits”    },
-{ id:“momHealthTab”, icon:””, label:“My Health”    },
-{ id:“postpartum”,   icon:””, label:“Postpartum”   },
-{ id:“reminders”,    icon:””, label:“Reminders”    },
-{ id:“momTips”,      icon:””, label:“Mom Tips”     },
-{ id:“reports”,      icon:””, label:“Reports”      },
-];
+ const kidNavItems = [
+ { id:"dashboard",  icon:"", label:"Dashboard"   },
+ { id:"kidTrends",  icon:"", label:"Trends"       },
+ { id:"symptoms",   icon:"", label:"Symptoms"     },
+ { id:"medications",icon:"", label:"Meds"         },
+ { id:"visits",     icon:"", label:"Visits"       },
+ { id:"growth",     icon:"", label:"Growth"       },
+ { id:"vaccines",   icon:"", label:"Vaccines"     },
+ { id:"vitals",     icon:"", label:"Vitals & Labs"},
+ { id:"allergies",  icon:"", label:"Allergies"    },
+ { id:"milestones", icon:"", label:"Milestones"   },
+ ...(selectedKid.age < 5 ? [{ id:"firsts", icon:"", label:"Firsts" }] : []),
+ { id:"infantLog",  icon:"", label:"Infant Log"   },
+ { id:"kidSleepTab",icon:"", label:"Sleep"        },
+ { id:"tips",       icon:"", label:"Nurse Tips"   },
+ { id:"kidReports", icon:"", label:"Reports"      },
+ ];
+ const momNavItems = [
+ { id:"momDashboard", icon:"", label:"Dashboard"   },
+ { id:"momTrends",    icon:"", label:"Trends"       },
+ { id:"feeding",      icon:"", label:"Feeding"      },
+ { id:"pumping",      icon:"", label:"Pumping"      },
+ { id:"hydration",    icon:"", label:"Hydration"    },
+ { id:"nutrition",    icon:"", label:"Nutrition"    },
+ { id:"cycle",        icon:"", label:"Cycle"        },
+ { id:"momVitalsTab", icon:"", label:"Vitals & Labs"},
+ { id:"momMeds",      icon:"", label:"My Meds"      },
+ { id:"momAllergies", icon:"", label:"Allergies"    },
+ { id:"momVisits",    icon:"", label:"My Visits"    },
+ { id:"momHealthTab", icon:"", label:"My Health"    },
+ { id:"postpartum",   icon:"", label:"Postpartum"   },
+ { id:"reminders",    icon:"", label:"Reminders"    },
+ { id:"momTips",      icon:"", label:"Mom Tips"     },
+ { id:"reports",      icon:"", label:"Reports"      },
+ ];
 
-// Event Detail Panel
-const EventDetailPanel = () => {
-if (!eventDetail) return null;
-const ev = eventDetail;
-const col = memberColor(ev.memberId);
-const name = memberName(ev.memberId);
-const ava = memberAvatar(ev.memberId);
-return (
-
+ // Event Detail Panel 
+ const EventDetailPanel = () => {
+ if (!eventDetail) return null;
+ const ev = eventDetail;
+ const col = memberColor(ev.memberId);
+ const name = memberName(ev.memberId);
+ const ava = memberAvatar(ev.memberId);
+ return (
  <div style={c.overlay} onClick={()=>setEventDetail(null)}>
  <div style={{ ...c.modalBox, maxWidth:420 }} onClick={e=>e.stopPropagation()}>
  <div style={{ height:8, borderRadius:"16px 16px 0 0", background:col, margin:"-28px -28px 20px", minWidth:"100%" }} />
@@ -1588,32 +1567,29 @@ return (
  );
  };
 
-// CALENDAR VIEW
-const CalendarView = () => {
-const firstDay = firstDayOfMonth(calYear, calMonth);
-const totalDays = daysInMonth(calYear, calMonth);
-const cells = [];
-for (let i=0; i<firstDay; i++) cells.push(null);
-for (let d=1; d<=totalDays; d++) cells.push(d);
+ // CALENDAR VIEW 
+ const CalendarView = () => {
+ const firstDay = firstDayOfMonth(calYear, calMonth);
+ const totalDays = daysInMonth(calYear, calMonth);
+ const cells = [];
+ for (let i=0; i<firstDay; i++) cells.push(null);
+ for (let d=1; d<=totalDays; d++) cells.push(d);
 
-return (
-
+ return (
  <div>
  {/* Month nav */}
  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
- <button style={c.smallBtn()} onClick={prevMonth}>←</button>
+ <button style={c.smallBtn()} onClick={prevMonth}>â†</button>
  <div style={{ fontWeight:400, fontSize:22, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic" }}>{MONTHS[calMonth]} {calYear}</div>
- <button style={c.smallBtn()} onClick={nextMonth}>→</button>
+ <button style={c.smallBtn()} onClick={nextMonth}>â†’</button>
  </div>
 
-{/* Day headers */}
-
+ {/* Day headers */}
  <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:2, marginBottom:2 }}>
  {DAYS.map(d => <div key={d} style={{ textAlign:"center", fontSize:10, fontWeight:500, color:theme.muted, padding:"3px 0", letterSpacing:"0.04em", fontFamily:"'Inter',sans-serif" }}>{d}</div>)}
  </div>
 
-{/* Calendar grid */}
-
+ {/* Calendar grid */}
  <div style={{ display:"grid", gridTemplateColumns:"repeat(7,1fr)", gap:2 }}>
  {cells.map((day, i) => {
  if (!day) return <div key={`empty-${i}`} style={{ height:64, background:"transparent" }} />;
@@ -1643,23 +1619,22 @@ return (
  })}
  </div>
 
-{/* Selected day events */}
-{selectedDate && (
-
+ {/* Selected day events */}
+ {selectedDate && (
  <div style={{ ...c.card, marginTop:20 }}>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
  <div style={{ fontWeight:500, fontSize:16 }}> {formatDate(selectedDate)}</div>
  <button style={c.btn()} onClick={()=>openAddEvent(selectedDate)}>Add Event</button>
  </div>
  {eventsForDate(selectedDate).length===0
- ? <div style={{ color:theme.muted, fontSize:14 }}>No events — tap + to add one!</div>
+ ? <div style={{ color:theme.muted, fontSize:14 }}>No events -- tap + to add one!</div>
  : eventsForDate(selectedDate).map(ev => (
  <div key={ev.id} onClick={()=>setEventDetail(ev)}
  style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0", borderBottom:`1px solid ${theme.border}`, cursor:"pointer" }}>
  <div style={{ width:4, height:40, borderRadius:999, background:memberColor(ev.memberId), flexShrink:0 }} />
  <div style={{ flex:1 }}>
  <div style={{ fontWeight:500 }}>{typeIcon(ev.type)} {ev.title}</div>
- <div style={{ fontSize:12, color:theme.muted }}>{formatTime(ev.time)}{ev.location?` · ${ev.location}`:""}</div>
+ <div style={{ fontSize:12, color:theme.muted }}>{formatTime(ev.time)}{ev.location?` . ${ev.location}`:""}</div>
  </div>
  <span style={{ ...c.badge(memberColor(ev.memberId)), fontSize:11 }}>{memberAvatar(ev.memberId)}</span>
  </div>
@@ -1671,13 +1646,12 @@ return (
  );
  };
 
-// LIST VIEW
-const ListView = () => {
-const monthEvents = eventsForMonth();
-const grouped = {};
-monthEvents.forEach(ev => { if (!grouped[ev.date]) grouped[ev.date]=[]; grouped[ev.date].push(ev); });
-return (
-
+ // LIST VIEW 
+ const ListView = () => {
+ const monthEvents = eventsForMonth();
+ const grouped = {};
+ monthEvents.forEach(ev => { if (!grouped[ev.date]) grouped[ev.date]=[]; grouped[ev.date].push(ev); });
+ return (
  <div>
  {Object.keys(grouped).length===0 && <div style={{ color:theme.muted }}>No events this month.</div>}
  {Object.entries(grouped).map(([date, evs]) => (
@@ -1689,7 +1663,7 @@ return (
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
  <div>
  <div style={{ fontWeight:500 }}>{typeIcon(ev.type)} {ev.title}</div>
- <div style={{ fontSize:12, color:theme.muted, marginTop:2 }}>{formatTime(ev.time)}{ev.location?` · ${ev.location}`:""}</div>
+ <div style={{ fontSize:12, color:theme.muted, marginTop:2 }}>{formatTime(ev.time)}{ev.location?` . ${ev.location}`:""}</div>
  </div>
  <span style={c.badge(memberColor(ev.memberId))}>{memberAvatar(ev.memberId)} {memberName(ev.memberId)}</span>
  </div>
@@ -1701,8 +1675,7 @@ return (
  );
  };
 
-return (
-
+ return (
  <div style={c.app}>
  {/* Header */}
  <div style={c.header}>
@@ -1710,8 +1683,7 @@ return (
  <div style={c.tagline}>Health tracking built by a nurse mom, for every mom.</div>
  </div>
 
-{/* Main tabs */}
-
+ {/* Main tabs */}
  <div style={c.mainTabBar}>
  <button style={c.mainTab(mainTab==="calendar")} onClick={()=>setMainTab("calendar")}>Family Calendar</button>
  <button style={c.mainTab(mainTab==="kids")}     onClick={()=>setMainTab("kids")}>My Kids</button>
@@ -1720,9 +1692,8 @@ return (
  <button style={c.mainTab(mainTab==="privacy")}  onClick={()=>setMainTab("privacy")}>Privacy</button>
  </div>
 
-{/* FAMILY CALENDAR */}
-{mainTab===“calendar” && (
-
+ {/* FAMILY CALENDAR */}
+ {mainTab==="calendar" && (
  <div style={c.main}>
  <DailyMotivation />
  {/* Color legend */}
@@ -1738,19 +1709,18 @@ return (
  </div>
  </div>
 
-{/* Upcoming strip */}
-
+ {/* Upcoming strip */}
  <div style={{ ...c.card, marginBottom:16, background:"linear-gradient(135deg,#faf8f5,#f5f0ea)" }}>
  <div style={c.sTitle}>Coming Up Next</div>
  {upcomingEvents().length===0
- ? <div style={{ color:theme.muted, fontSize:14 }}>No upcoming events — add some!</div>
+ ? <div style={{ color:theme.muted, fontSize:14 }}>No upcoming events -- add some!</div>
  : upcomingEvents().map(ev => (
  <div key={ev.id} onClick={()=>setEventDetail(ev)}
  style={{ display:"flex", alignItems:"center", gap:10, padding:"8px 0", borderBottom:`1px solid ${theme.border}`, cursor:"pointer" }}>
  <div style={{ width:4, height:36, borderRadius:999, background:memberColor(ev.memberId), flexShrink:0 }} />
  <div style={{ flex:1 }}>
  <div style={{ fontWeight:500, fontSize:14 }}>{typeIcon(ev.type)} {ev.title}</div>
- <div style={{ fontSize:12, color:theme.muted }}>{formatDate(ev.date)}{ev.time?` · ${formatTime(ev.time)}`:""}</div>
+ <div style={{ fontSize:12, color:theme.muted }}>{formatDate(ev.date)}{ev.time?` . ${formatTime(ev.time)}`:""}</div>
  </div>
  <span style={{ ...c.badge(memberColor(ev.memberId)), fontSize:11 }}>{memberAvatar(ev.memberId)}</span>
  </div>
@@ -1758,8 +1728,7 @@ return (
  }
  </div>
 
-{/* Controls */}
-
+ {/* Controls */}
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:10 }}>
  <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
  <button style={c.smallBtn(calView==="month"?theme.accent:theme.muted)} onClick={()=>setCalView("month")}> Month</button>
@@ -1776,14 +1745,12 @@ return (
  </div>
  </div>
 
-{calView===“month” ? <CalendarView /> : <ListView />}
-
+ {calView==="month" ? <CalendarView /> : <ListView />}
  </div>
  )}
 
-{/* KIDS */}
-{mainTab===“kids” && (<>
-
+ {/* KIDS */}
+ {mainTab==="kids" && (<>
  <div style={c.kidBar}>
  {kids.map(k=>(
  <div key={k.id} style={c.kidChip(selectedKid.id===k.id)} onClick={()=>setSelectedKid(k)}>
@@ -1810,7 +1777,7 @@ return (
  <details key={group.label} open={isActive} style={{ marginBottom:4 }}>
  <summary style={{ fontSize:10, fontWeight:500, letterSpacing:"0.1em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif", color:isActive?theme.accent:theme.muted, cursor:"pointer", padding:"4px 0", listStyle:"none", display:"flex", alignItems:"center", justifyContent:"center", gap:6, textAlign:"center" }}>
  {group.label}
- <span style={{ fontSize:10, color:theme.muted }}>{isActive?"▲":"▼"}</span>
+ <span style={{ fontSize:10, color:theme.muted }}>{isActive?"â–²":"â–¼"}</span>
  </summary>
  <div style={{ display:"flex", gap:4, flexWrap:"wrap", paddingTop:6, justifyContent:"center" }}>
  {group.tabs.map(t=>(
@@ -1825,7 +1792,7 @@ return (
  {view==="dashboard" && <>
  <div style={{ marginBottom:24 }}>
  <div style={{ fontSize:44, fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic" }}>{selectedKid.name}</div>
- <div style={{ color:theme.muted, fontSize:14 }}>Age {selectedKid.age} · Blood Type {selectedKid.bloodType} · DOB {selectedKid.dob}</div>
+ <div style={{ color:theme.muted, fontSize:14 }}>Age {selectedKid.age} . Blood Type {selectedKid.bloodType} . DOB {selectedKid.dob}</div>
  </div>
  <div style={c.statGrid}>
  <div style={c.stat(theme.coral)} onClick={()=>setView("symptoms")}><div style={{ ...c.statNum, color:theme.coral }}>{kidSymptoms.length}</div><div style={c.statLabel}>Symptoms</div></div>
@@ -1838,11 +1805,11 @@ return (
  <div style={c.card}>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
  <div style={c.sTitle}>{selectedKid.name}&#39;s Schedule</div>
- <button style={{ background:"none", border:"none", color:theme.accent, cursor:"pointer", fontSize:11, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" }} onClick={()=>setMainTab("calendar")}>View All →</button>
+ <button style={{ background:"none", border:"none", color:theme.accent, cursor:"pointer", fontSize:11, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" }} onClick={()=>setMainTab("calendar")}>View All â†’</button>
  </div>
  {events.filter(e=>String(e.memberId)===String(selectedKid.id)&&e.date>=today).slice(0,5).length===0 ? (
  <div style={{ color:theme.muted, fontSize:13, fontFamily:"'Inter',sans-serif" }}>
- No upcoming appointments. <span style={{ color:theme.accent, cursor:"pointer" }} onClick={()=>setMainTab("calendar")}>Add one →</span>
+ No upcoming appointments. <span style={{ color:theme.accent, cursor:"pointer" }} onClick={()=>setMainTab("calendar")}>Add one â†’</span>
  </div>
  ) : (
  <div>
@@ -1855,22 +1822,22 @@ return (
  <div style={{ width:3, height:36, borderRadius:999, background:theme.accent, flexShrink:0 }} />
  <div style={{ flex:1 }}>
  <div style={{ fontSize:13, fontFamily:"'Inter',sans-serif", color:theme.text }}>{ev.title}</div>
- <div style={{ fontSize:11, color:theme.muted, marginTop:2 }}>{ev.time ? formatTime(ev.time) : ""}{ev.location ? " · "+ev.location : ""}</div>
+ <div style={{ fontSize:11, color:theme.muted, marginTop:2 }}>{ev.time ? formatTime(ev.time) : ""}{ev.location ? " . "+ev.location : ""}</div>
  </div>
  </div>
  ))}
  </div>
  )}
  </div>
- {/* Firsts preview — only for under 5 */}
+ {/* Firsts preview -- only for under 5 */}
  {selectedKid.age < 5 && (
  <div style={{ ...c.card, background:"linear-gradient(135deg,#f5f0ea,#ede8e0)", border:"none", cursor:"pointer" }} onClick={()=>setView("firsts")}>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
  <div style={{ fontWeight:500, fontSize:15 }}>{selectedKid.name}'s Firsts</div>
- <span style={c.badge(theme.accent)}>{kidFirstsList.length} logged →</span>
+ <span style={c.badge(theme.accent)}>{kidFirstsList.length} logged â†’</span>
  </div>
  {kidFirstsList.length === 0 ? (
- <div style={{ fontSize:13, color:theme.muted }}>No firsts logged yet — tap to start capturing precious moments! </div>
+ <div style={{ fontSize:13, color:theme.muted }}>No firsts logged yet -- tap to start capturing precious moments! </div>
  ) : (
  <div style={{ fontSize:14, color:theme.text, fontStyle:"italic", lineHeight:1.7 }}>
  Most recent: <span style={{fontWeight:500}}>{kidFirstsList.sort((a,b)=>new Date(b.date)-new Date(a.date))[0]?.title}</span> on {kidFirstsList.sort((a,b)=>new Date(b.date)-new Date(a.date))[0]?.date}
@@ -1884,13 +1851,11 @@ return (
  </div>
  </>}
 
-{view===“kidTrends” && <>
-
+ {view==="kidTrends" && <>
  <h2 style={{ margin:"0 0 16px", fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", fontSize:30 }}>{selectedKid.name}'s Trends</h2>
  <InfoBanner gradient="#faf8f5">Patterns over time help you spot what matters. This section grows as you log more data.</InfoBanner>
 
-{/* Symptom frequency */}
-
+ {/* Symptom frequency */}
  <div style={c.card}>
  <div style={c.sTitle}>Symptoms Over Time</div>
  {kidSymptoms.length < 3 ? (
@@ -1914,9 +1879,8 @@ return (
  })()}
  </div>
 
-{/* Growth trend */}
-{kidGrowth.length >= 2 && (
-
+ {/* Growth trend */}
+ {kidGrowth.length >= 2 && (
  <div style={c.card}>
  <div style={c.sTitle}>Growth Trend</div>
  <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
@@ -1931,9 +1895,8 @@ return (
  </div>
  )}
 
-{/* Sleep patterns */}
-{kidSleepLog.length >= 3 && (
-
+ {/* Sleep patterns */}
+ {kidSleepLog.length >= 3 && (
  <div style={c.card}>
  <div style={c.sTitle}>Sleep Patterns</div>
  {(() => {
@@ -1957,8 +1920,7 @@ return (
  </div>
  )}
 
-{/* Vaccine progress */}
-
+ {/* Vaccine progress */}
  <div style={c.card}>
  <div style={c.sTitle}>Vaccine Progress</div>
  {(() => {
@@ -1984,50 +1946,48 @@ return (
  </div>
  </>}
 
-{view===“kidReports” && <>
-
+ {view==="kidReports" && <>
  <h2 style={{ margin:"0 0 16px", fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", fontSize:30 }}>{selectedKid.name}'s Reports</h2>
  <InfoBanner gradient="#faf8f5">Generate a PDF summary to bring to any appointment or share with a new provider. Premium feature.</InfoBanner>
 
-{[
-{
-title:“Full Health Summary”,
-desc:“Everything in one document — symptoms, medications, visits, growth, vaccines, vitals, allergies, and milestones. Perfect for a new pediatrician or specialist.”,
-color:theme.accent,
-stats:[`${kidSymptoms.length} symptoms`, `${kidMeds.length} medications`, `${kidVisits.length} visits`],
-},
-{
-title:“Vaccination Record”,
-desc:“Complete vaccine history with dates and lot numbers, formatted for school enrollment, travel, or a new provider.”,
-color:theme.green,
-stats:[`${vaccines.filter(v=>v.kidId===selectedKid.id).length} vaccines logged`],
-},
-{
-title:“Growth Chart Report”,
-desc:“Height, weight, and head circumference over time with a visual chart. Great for specialist referrals.”,
-color:theme.teal,
-stats:[`${kidGrowth.length} measurements logged`],
-},
-{
-title:“Visit History”,
-desc:“All doctor visits with diagnoses, follow-up instructions, and notes in chronological order.”,
-color:theme.blue,
-stats:[`${kidVisits.length} visits logged`],
-},
-{
-title:“Allergy & Medication Summary”,
-desc:“All known allergies with action plans and current medications — ideal for school nurses, camps, or new caregivers.”,
-color:theme.coral,
-stats:[`${kidAllergyList.length} allergies`, `${kidMeds.filter(m=>m.active).length} active meds`],
-},
-{
-title:“Developmental Milestones Report”,
-desc:“Full CDC milestone progress across all four developmental domains with achieved dates.”,
-color:theme.purple,
-stats:[`${kidMilestones.length} milestones tracked`],
-},
-].map((report,i)=>(
-
+ {[
+ {
+ title:"Full Health Summary",
+ desc:"Everything in one document -- symptoms, medications, visits, growth, vaccines, vitals, allergies, and milestones. Perfect for a new pediatrician or specialist.",
+ color:theme.accent,
+ stats:[`${kidSymptoms.length} symptoms`, `${kidMeds.length} medications`, `${kidVisits.length} visits`],
+ },
+ {
+ title:"Vaccination Record",
+ desc:"Complete vaccine history with dates and lot numbers, formatted for school enrollment, travel, or a new provider.",
+ color:theme.green,
+ stats:[`${vaccines.filter(v=>v.kidId===selectedKid.id).length} vaccines logged`],
+ },
+ {
+ title:"Growth Chart Report",
+ desc:"Height, weight, and head circumference over time with a visual chart. Great for specialist referrals.",
+ color:theme.teal,
+ stats:[`${kidGrowth.length} measurements logged`],
+ },
+ {
+ title:"Visit History",
+ desc:"All doctor visits with diagnoses, follow-up instructions, and notes in chronological order.",
+ color:theme.blue,
+ stats:[`${kidVisits.length} visits logged`],
+ },
+ {
+ title:"Allergy & Medication Summary",
+ desc:"All known allergies with action plans and current medications -- ideal for school nurses, camps, or new caregivers.",
+ color:theme.coral,
+ stats:[`${kidAllergyList.length} allergies`, `${kidMeds.filter(m=>m.active).length} active meds`],
+ },
+ {
+ title:"Developmental Milestones Report",
+ desc:"Full CDC milestone progress across all four developmental domains with achieved dates.",
+ color:theme.purple,
+ stats:[`${kidMilestones.length} milestones tracked`],
+ },
+ ].map((report,i)=>(
  <div key={i} style={{ ...c.card, cursor:"pointer" }}>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:12 }}>
  <div style={{ flex:1 }}>
@@ -2054,32 +2014,29 @@ stats:[`${kidMilestones.length} milestones tracked`],
  </div>
  </>}
 
-{view===“symptoms” && <>
-<PageHeader title=“Symptom Log” btnLabel=“Add Symptom” onAdd={()=>openAdd(“symptoms”,F.symptom,“symptoms”,true)} />
-{kidSymptoms.length===0 && <div style={{ color:theme.muted }}>No symptoms logged yet.</div>}
-{kidSymptoms.map(s=>(
-<EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={s.id} item={s} dataKey="symptoms" label={s.symptom} fields={F.symptom} kidScoped>
-
+ {view==="symptoms" && <>
+ <PageHeader title="Symptom Log" btnLabel="Add Symptom" onAdd={()=>openAdd("symptoms",F.symptom,"symptoms",true)} />
+ {kidSymptoms.length===0 && <div style={{ color:theme.muted }}>No symptoms logged yet.</div>}
+ {kidSymptoms.map(s=>(
+ <EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={s.id} item={s} dataKey="symptoms" label={s.symptom} fields={F.symptom} kidScoped>
  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}><div style={{ fontWeight:500 }}>{s.symptom}</div><span style={c.badge(severityColor(s.severity))}>{s.severity}</span></div>
- <div style={{ fontSize:13, color:theme.muted }}>{s.date} · {s.notes}</div>
+ <div style={{ fontSize:13, color:theme.muted }}>{s.date} . {s.notes}</div>
  </EntryCard>
  ))}
  </>}
 
-{view===“medications” && <>
-<PageHeader title=“Medications” btnLabel=“Add Medication” onAdd={()=>openAdd(“meds”,F.med,“meds”,true)} />
-{kidMeds.length===0 && <div style={{ color:theme.muted }}>No medications logged yet.</div>}
-{kidMeds.map(m=>(
-<EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={m.id} item={m} dataKey="meds" label={m.name} fields={F.med} kidScoped>
-
+ {view==="medications" && <>
+ <PageHeader title="Medications" btnLabel="Add Medication" onAdd={()=>openAdd("meds",F.med,"meds",true)} />
+ {kidMeds.length===0 && <div style={{ color:theme.muted }}>No medications logged yet.</div>}
+ {kidMeds.map(m=>(
+ <EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={m.id} item={m} dataKey="meds" label={m.name} fields={F.med} kidScoped>
  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}><div style={{ fontWeight:500 }}> {m.name}</div><span style={c.badge(m.active?theme.green:theme.muted)}>{m.active?"Active":"Inactive"}</span></div>
- <div style={{ fontSize:13, color:theme.muted }}>Dose: {m.dose} · {m.freq} · Started {m.startDate}</div>
+ <div style={{ fontSize:13, color:theme.muted }}>Dose: {m.dose} . {m.freq} . Started {m.startDate}</div>
  </EntryCard>
  ))}
  </>}
 
-{view===“visits” && <>
-
+ {view==="visits" && <>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:10 }}>
  <h2 style={{ margin:0, fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", fontSize:30 }}>Doctor Visits</h2>
  <div style={{ display:"flex", gap:8 }}>
@@ -2092,7 +2049,7 @@ stats:[`${kidMilestones.length} milestones tracked`],
  {[...kidVisits].reverse().map(v=>(
  <EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={v.id} item={v} dataKey="visits" label={v.reason} fields={F.visit} kidScoped>
  <div style={{ fontWeight:500, fontSize:13, marginBottom:4, fontFamily:"'Inter',sans-serif" }}>{v.reason}</div>
- <div style={{ fontSize:12, color:theme.muted }}>{v.date}{v.doctor ? " · "+v.doctor : ""}{v.clinic ? " · "+v.clinic : ""}</div>
+ <div style={{ fontSize:12, color:theme.muted }}>{v.date}{v.doctor ? " . "+v.doctor : ""}{v.clinic ? " . "+v.clinic : ""}</div>
  {v.diagnosis && <div style={{ fontSize:12, marginTop:6 }}><span style={{ color:theme.muted, letterSpacing:"0.04em", textTransform:"uppercase", fontSize:10 }}>Diagnosis </span>{v.diagnosis}</div>}
  {v.followUp && <div style={{ fontSize:12, marginTop:4 }}><span style={{ color:theme.muted, letterSpacing:"0.04em", textTransform:"uppercase", fontSize:10 }}>Follow-up </span>{v.followUp}</div>}
  {v.notes && <div style={{ fontSize:13, color:theme.muted, marginTop:6, fontStyle:"italic", fontFamily:"'Cormorant Garamond',serif" }}>{v.notes}</div>}
@@ -2100,13 +2057,12 @@ stats:[`${kidMilestones.length} milestones tracked`],
  ))}
  </>}
 
-{view===“growth” && <>
-<PageHeader title=“Growth Tracking” btnLabel=“Add Measurement” btnColor={theme.green} onAdd={()=>openAdd(“growth”,F.growth,“growth”,true)} />
-<InfoBanner gradient="linear-gradient(135deg,#f3f7f5,#f0f5f7)">Tracking height, weight, and head circumference. Head circumference is especially important for children under 2.</InfoBanner>
-{kidGrowth.length===0 && <div style={{ color:theme.muted }}>No growth data yet.</div>}
-{kidGrowth.map(g=>(
-<EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={g.id} item={g} dataKey=“growth” label={`Growth ${g.date}`} fields={F.growth} kidScoped>
-
+ {view==="growth" && <>
+ <PageHeader title="Growth Tracking" btnLabel="Add Measurement" btnColor={theme.green} onAdd={()=>openAdd("growth",F.growth,"growth",true)} />
+ <InfoBanner gradient="linear-gradient(135deg,#f3f7f5,#f0f5f7)">Tracking height, weight, and head circumference. Head circumference is especially important for children under 2.</InfoBanner>
+ {kidGrowth.length===0 && <div style={{ color:theme.muted }}>No growth data yet.</div>}
+ {kidGrowth.map(g=>(
+ <EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={g.id} item={g} dataKey="growth" label={`Growth ${g.date}`} fields={F.growth} kidScoped>
  <div style={{ fontSize:13, color:theme.muted, marginBottom:12 }}>{g.date}</div>
  <div style={{ display:"flex", gap:20, flexWrap:"wrap" }}>
  <div><div style={{ fontSize:24, fontWeight:500, color:theme.accent }}>{g.height}<span style={{ fontSize:13 }}>cm</span></div><div style={{ fontSize:11, color:theme.muted }}>Height</div></div>
@@ -2117,31 +2073,29 @@ stats:[`${kidMilestones.length} milestones tracked`],
  ))}
  </>}
 
-{view===“vaccines” && <>
-<PageHeader title=“Vaccines & Birth Meds” btnLabel=”+ Log Given” btnColor={theme.purple} onAdd={()=>openAdd(“vaccines”,F.vaccine,“vaccines”,true)} />
+ {view==="vaccines" && <>
+ <PageHeader title="Vaccines & Birth Meds" btnLabel="+ Log Given" btnColor={theme.purple} onAdd={()=>openAdd("vaccines",F.vaccine,"vaccines",true)} />
 
-{/* AAP source badge */}
-
+ {/* AAP source badge */}
  <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16, padding:"12px 16px", background:"#f3f6f8", borderRadius:6, border:`1px solid ${theme.blue}33` }}>
  <span style={{ fontSize:22 }}></span>
  <div>
  <div style={{ fontWeight:500, fontSize:13, color:theme.blue }}>AAP 2026 Immunization Schedule</div>
- <div style={{ fontSize:11, color:theme.muted }}>Source: American Academy of Pediatrics · aap.org/ImmunizationSchedule</div>
+ <div style={{ fontSize:11, color:theme.muted }}>Source: American Academy of Pediatrics . aap.org/ImmunizationSchedule</div>
  <div style={{ fontSize:11, color:theme.muted }}>Endorsed by 230+ medical organizations. Always consult your pediatrician.</div>
  </div>
  </div>
 
-{/* Important note */}
-<InfoBanner gradient="linear-gradient(135deg,#faf8f5,#f5f0ea)">
-In January 2026 the CDC reduced its vaccine schedule. The AAP — along with the AMA and 10+ major medical organizations — continues to recommend the full schedule below based on U.S.-specific disease risk and evidence. Follow your pediatrician’s guidance.
-</InfoBanner>
+ {/* Important note */}
+ <InfoBanner gradient="linear-gradient(135deg,#faf8f5,#f5f0ea)">
+ In January 2026 the CDC reduced its vaccine schedule. The AAP -- along with the AMA and 10+ major medical organizations -- continues to recommend the full schedule below based on U.S.-specific disease risk and evidence. Follow your pediatrician's guidance.
+ </InfoBanner>
 
-{/* AAP Schedule by age group */}
-{vaccineSchedule.map(group => {
-const groupGiven = kidVaccineList.filter(kv => group.items.some(i => kv.name === i.name));
-const pct = Math.round((groupGiven.length / group.items.length) * 100);
-return (
-
+ {/* AAP Schedule by age group */}
+ {vaccineSchedule.map(group => {
+ const groupGiven = kidVaccineList.filter(kv => group.items.some(i => kv.name === i.name));
+ const pct = Math.round((groupGiven.length / group.items.length) * 100);
+ return (
  <div key={group.ageGroup} style={{ ...c.card, borderLeft:`4px solid ${group.color}` }}>
  {/* Age group header */}
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
@@ -2155,17 +2109,15 @@ return (
  <span style={c.badge(pct===100 ? theme.green : group.color)}>{pct===100 ? " Complete" : `${pct}%`}</span>
  </div>
 
-{/* Progress bar */}
-
+ {/* Progress bar */}
  <div style={{ background:theme.border, borderRadius:999, height:5, overflow:"hidden", marginBottom:12 }}>
  <div style={{ width:`${pct}%`, background:`linear-gradient(90deg,${group.color},${theme.green})`, height:"100%", borderRadius:999, transition:"width 0.4s" }} />
  </div>
 
-{/* Items */}
-{group.items.map((item, i) => {
-const given = kidVaccineList.find(kv => kv.name === item.name);
-return (
-
+ {/* Items */}
+ {group.items.map((item, i) => {
+ const given = kidVaccineList.find(kv => kv.name === item.name);
+ return (
  <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"10px 0", borderBottom: i < group.items.length-1 ? `1px solid ${theme.border}` : "none" }}>
  <div style={{ width:24, height:24, borderRadius:6, background: given ? theme.green : `${group.color}22`, border:`1px solid ${given ? theme.green : group.color}`, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, color: given ? "#fff" : group.color, marginTop:1 }}>
  {given ? "" : item.isMed ? "" : ""}
@@ -2185,8 +2137,7 @@ return (
  );
  })}
 
-{/* Logged vaccines */}
-
+ {/* Logged vaccines */}
  <h3 style={{ fontWeight:500, fontSize:16, marginBottom:12, marginTop:8 }}>Logged Records</h3>
  {kidVaccineList.length===0 && <div style={{ color:theme.muted, marginBottom:16 }}>No vaccines logged yet. Tap "+ Log Given" to record one.</div>}
  {kidVaccineList.map(v=>(
@@ -2203,9 +2154,8 @@ return (
  ))}
  </>}
 
-{view===“vitals” && <>
-<PageHeader title=“Vitals & Labs” btnLabel=”+ Log Vitals” btnColor={theme.coral} onAdd={()=>openAdd(“kidVitals”,F.kidVital,“kidVitals”,true)} />
-
+ {view==="vitals" && <>
+ <PageHeader title="Vitals & Labs" btnLabel="+ Log Vitals" btnColor={theme.coral} onAdd={()=>openAdd("kidVitals",F.kidVital,"kidVitals",true)} />
  <div style={{ marginBottom:16 }}><button style={c.smallBtn(theme.blue)} onClick={()=>openAdd("kidLabs",F.kidLab,"kidLabs",true)}>Add Lab Result</button></div>
  <div style={c.sTitle}>Vital Signs</div>
  {kidVitalsList.length===0&&<div style={{ color:theme.muted, marginBottom:16 }}>No vitals logged yet.</div>}
@@ -2215,31 +2165,29 @@ return (
  {kidLabsList.map(l=><LabCard key={l.id} lab={l} dataKey="kidLabs" fields={F.kidLab} kidScoped />)}
  </>}
 
-{view===“milestones” && <>
-<PageHeader title="Developmental Milestones" />
-<InfoBanner gradient="linear-gradient(135deg,#faf8f5,#f5f0ea)">
-Based on the CDC “Learn the Signs. Act Early.” checklist (2022). Tap any milestone to mark it achieved. Every child develops at their own pace — this is a guide, not a strict timeline. Not a substitute for professional screening.
-</InfoBanner>
+ {view==="milestones" && <>
+ <PageHeader title="Developmental Milestones" />
+ <InfoBanner gradient="linear-gradient(135deg,#faf8f5,#f5f0ea)">
+ Based on the CDC "Learn the Signs. Act Early." checklist (2022). Tap any milestone to mark it achieved. Every child develops at their own pace -- this is a guide, not a strict timeline. Not a substitute for professional screening.
+ </InfoBanner>
 
-{/* CDC source badge */}
-
+ {/* CDC source badge */}
  <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:20, padding:"10px 16px", background:"#f3f6f8", borderRadius:6, border:`1px solid ${theme.blue}33` }}>
  <span style={{ fontSize:18 }}></span>
  <div>
  <div style={{ fontWeight:500, fontSize:13, color:theme.blue }}>CDC Official Checklist</div>
- <div style={{ fontSize:11, color:theme.muted }}>Source: cdc.gov/act-early · Last updated 2022</div>
+ <div style={{ fontSize:11, color:theme.muted }}>Source: cdc.gov/act-early . Last updated 2022</div>
  </div>
  </div>
 
-{Object.entries(milestoneData).map(([age, categories])=>{
-// flatten all items for counting
-const allItems = Object.values(categories).flat();
-const achieved = kidMilestones.filter(m=>m.age===age);
-const isOpen = expandedMilestone===age;
-const pct = allItems.length ? Math.round((achieved.length/allItems.length)*100) : 0;
+ {Object.entries(milestoneData).map(([age, categories])=>{
+ // flatten all items for counting
+ const allItems = Object.values(categories).flat();
+ const achieved = kidMilestones.filter(m=>m.age===age);
+ const isOpen = expandedMilestone===age;
+ const pct = allItems.length ? Math.round((achieved.length/allItems.length)*100) : 0;
 
-return (
-
+ return (
  <div key={age} style={c.card}>
  {/* Age header */}
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", cursor:"pointer" }} onClick={()=>setExpandedMilestone(isOpen?null:age)}>
@@ -2253,15 +2201,13 @@ return (
  </div>
  </div>
 
-{/* Progress bar */}
-
+ {/* Progress bar */}
  <div style={{ marginTop:10, background:theme.border, borderRadius:999, height:6, overflow:"hidden" }}>
  <div style={{ width:`${pct}%`, background:`linear-gradient(90deg,${theme.accent},${theme.green})`, height:"100%", borderRadius:999, transition:"width 0.4s" }} />
  </div>
 
-{/* Category sections */}
-{isOpen && (
-
+ {/* Category sections */}
+ {isOpen && (
  <div style={{ marginTop:16, borderTop:`1px solid ${theme.border}`, paddingTop:16 }}>
  {Object.entries(categories).map(([category, items])=>(
  <div key={category} style={{ marginBottom:14 }}>
@@ -2293,8 +2239,7 @@ return (
  })}
  </>}
 
-{view===“firsts” && selectedKid.age < 5 && <>
-
+ {view==="firsts" && selectedKid.age < 5 && <>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8, flexWrap:"wrap", gap:10 }}>
  <div>
  <h2 style={{ margin:0, fontWeight:500 }}>{selectedKid.name}'s Firsts</h2>
@@ -2303,19 +2248,17 @@ return (
  <button style={c.btn(theme.accent)} onClick={()=>openAdd("kidFirsts",F.first,"kidFirsts",true)}>Add a First</button>
  </div>
 
-{/* Warm intro banner */}
-
+ {/* Warm intro banner */}
  <div style={{ ...c.card, background:"linear-gradient(135deg,#f5f0ea,#ede8e0)", border:"none", marginBottom:16 }}>
  <p style={{ margin:0, fontSize:13, lineHeight:1.8, color:theme.text }}>
- When mom brain is getting the best of you and time is flying by — log every first right here, in real time. No baby book, no guilt, no forgetting. Just tap and it's saved forever. 
+ When mom brain is getting the best of you and time is flying by -- log every first right here, in real time. No baby book, no guilt, no forgetting. Just tap and it's saved forever. 
  </p>
  </div>
 
-{/* Suggestions — things to log */}
-{kidFirstsList.length < 5 && (
-
+ {/* Suggestions -- things to log */}
+ {kidFirstsList.length < 5 && (
  <div style={c.card}>
- <div style={c.sTitle}> Firsts to Capture — Tap to Log</div>
+ <div style={c.sTitle}> Firsts to Capture -- Tap to Log</div>
  <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
  {[
  { title:"First Smile", category:"Social" },
@@ -2358,9 +2301,8 @@ return (
  </div>
  )}
 
-{/* Stats */}
-{kidFirstsList.length > 0 && (
-
+ {/* Stats */}
+ {kidFirstsList.length > 0 && (
  <div style={c.statGrid}>
  {Object.entries(
  kidFirstsList.reduce((acc, f) => { acc[f.category]=(acc[f.category]||0)+1; return acc; }, {})
@@ -2380,9 +2322,8 @@ return (
  </div>
  )}
 
-{/* Firsts cards — scrapbook style */}
-{kidFirstsList.length === 0 && (
-
+ {/* Firsts cards -- scrapbook style */}
+ {kidFirstsList.length === 0 && (
  <div style={{ ...c.card, textAlign:"center", padding:40 }}>
  <div style={{ fontSize:48, marginBottom:12 }}></div>
  <div style={{ fontWeight:500, fontSize:18, marginBottom:8 }}>No firsts logged yet!</div>
@@ -2390,14 +2331,13 @@ return (
  </div>
  )}
 
-{[…kidFirstsList].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(f => {
-const catColor = {
-“Social”:”#b5836a”,“Movement”:”#7a9e87”,“Feeding”:”#c9a96e”,
-“Communication”:”#7a96a8”,“Sleep”:”#8f8aa0”,“Health & Body”:”#b5836a”,
-“Experiences”:”#6a9e96”,“Personality”:”#c0614a”,“Other”:theme.muted,
-}[f.category] || theme.muted;
-return (
-
+ {[...kidFirstsList].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(f => {
+ const catColor = {
+ "Social":"#b5836a","Movement":"#7a9e87","Feeding":"#c9a96e",
+ "Communication":"#7a96a8","Sleep":"#8f8aa0","Health & Body":"#b5836a",
+ "Experiences":"#6a9e96","Personality":"#c0614a","Other":theme.muted,
+ }[f.category] || theme.muted;
+ return (
  <div key={f.id} style={{ ...c.card, borderLeft:`5px solid ${catColor}`, position:"relative", background:"linear-gradient(135deg,#fff,#fffaf8)" }}>
  <div style={{ position:"absolute", top:14, right:14, display:"flex", gap:4 }}>
  <button style={c.iconBtn(theme.blue)} onClick={()=>openEdit(f,"first",F.first,"kidFirsts",true)}></button>
@@ -2417,26 +2357,23 @@ return (
  </div>
  </div>
 
-{/* Story */}
-{f.story && (
-
+ {/* Story */}
+ {f.story && (
  <div style={{ background:`${catColor}10`, border:`1px solid ${catColor}33`, borderRadius:6, padding:"10px 14px", marginBottom:10, fontSize:14, lineHeight:1.8, color:theme.text, fontStyle:"italic" }}>
  "{f.story}"
  </div>
  )}
 
-{/* Mom feeling */}
-{f.momFeeling && (
-
+ {/* Mom feeling */}
+ {f.momFeeling && (
  <div style={{ display:"flex", gap:8, alignItems:"flex-start", marginBottom:8 }}>
  <span style={{ fontSize:16, flexShrink:0 }}></span>
  <div style={{ fontSize:13, color:theme.accent, fontWeight:500, lineHeight:1.6 }}>{f.momFeeling}</div>
  </div>
  )}
 
-{/* Who was there */}
-{f.witnesses && (
-
+ {/* Who was there */}
+ {f.witnesses && (
  <div style={{ fontSize:12, color:theme.muted }}>
  Witnessed by: <strong style={{ color:theme.text }}>{f.witnesses}</span>
  </div>
@@ -2447,28 +2384,27 @@ return (
  })}
  </>}
 
-{view===“infantLog” && <>
-<PageHeader title="Infant Log" />
+ {view==="infantLog" && <>
+ <PageHeader title="Infant Log" />
 
-{/* Why Tracking Matters — dropdown */}
-
+ {/* Why Tracking Matters -- dropdown */}
  <div style={{ ...c.card, cursor:"pointer", borderLeft:`3px solid ${theme.accent}` }} onClick={()=>setIlSection(ilSection==="science"?null:"science")}>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
  <div>
  <div style={{ fontSize:13, fontWeight:500, color:theme.accent, fontFamily:"'Inter',sans-serif", marginBottom:2 }}>Why Tracking Matters</div>
- <div style={{ fontSize:11, color:theme.muted, fontFamily:"'Inter',sans-serif" }}>The science behind mom brain — and why logging helps.</div>
+ <div style={{ fontSize:11, color:theme.muted, fontFamily:"'Inter',sans-serif" }}>The science behind mom brain -- and why logging helps.</div>
  </div>
- <div style={{ fontSize:12, color:theme.muted }}>{ilSection==="science"?"▲":"▼"}</div>
+ <div style={{ fontSize:12, color:theme.muted }}>{ilSection==="science"?"â–²":"â–¼"}</div>
  </div>
  {ilSection==="science" && (
  <div style={{ marginTop:14, borderTop:`1px solid ${theme.border}`, paddingTop:14 }}>
  <p style={{ margin:"0 0 12px", fontSize:13, lineHeight:1.8, color:theme.text, fontFamily:"'Inter',sans-serif" }}>
- Research shows up to 80% of new mothers experience postpartum cognitive changes — mom brain is real. It is a documented neurological shift driven by:
+ Research shows up to 80% of new mothers experience postpartum cognitive changes -- mom brain is real. It is a documented neurological shift driven by:
  </p>
  {[
  { title:"Sleep deprivation", desc:"Losing even 1-2 hours significantly impairs short-term memory. New parents lose an average of 44 days of sleep in the first year." },
  { title:"Hormonal changes", desc:"Estrogen and progesterone drop dramatically after birth. These hormones directly support memory consolidation and cognitive function." },
- { title:"Brain remodeling", desc:"The maternal brain restructures itself postpartum — pruning and rewiring to prioritize infant care. This is temporary." },
+ { title:"Brain remodeling", desc:"The maternal brain restructures itself postpartum -- pruning and rewiring to prioritize infant care. This is temporary." },
  { title:"Cognitive overload", desc:"The mental load of caring for a newborn is immense. When overwhelmed, the brain deprioritizes non-urgent memory storage." },
  ].map((item,i)=>(
  <div key={i} style={{ padding:"10px 12px", background:"#faf8f5", borderRadius:6, marginBottom:6 }}>
@@ -2477,21 +2413,20 @@ return (
  </div>
  ))}
  <div style={{ fontSize:13, fontStyle:"italic", color:theme.accent, lineHeight:1.7, marginTop:10, fontFamily:"'Cormorant Garamond',serif" }}>
- Log for peace of mind — a tool to protect you and your baby when your brain is doing its hardest work.
+ Log for peace of mind -- a tool to protect you and your baby when your brain is doing its hardest work.
  </div>
  </div>
  )}
  </div>
 
-{/* Nurse-Approved Strategies — dropdown */}
-
+ {/* Nurse-Approved Strategies -- dropdown */}
  <div style={{ ...c.card, cursor:"pointer", borderLeft:`3px solid ${theme.teal}`, marginBottom:16 }} onClick={()=>setIlSection(ilSection==="strategies"?null:"strategies")}>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
  <div>
  <div style={{ fontSize:13, fontWeight:500, color:theme.teal, fontFamily:"'Inter',sans-serif", marginBottom:2 }}>Nurse-Approved Strategies</div>
  <div style={{ fontSize:11, color:theme.muted, fontFamily:"'Inter',sans-serif" }}>Tips for staying organized when sleep-deprived.</div>
  </div>
- <div style={{ fontSize:12, color:theme.muted }}>{ilSection==="strategies"?"▲":"▼"}</div>
+ <div style={{ fontSize:12, color:theme.muted }}>{ilSection==="strategies"?"â–²":"â–¼"}</div>
  </div>
  {ilSection==="strategies" && (
  <div style={{ marginTop:14, borderTop:`1px solid ${theme.border}`, paddingTop:14 }}>
@@ -2512,20 +2447,19 @@ return (
  )}
  </div>
 
-{/* Quick stats for today */}
-{(() => {
-const todayFeeds = kidFeedings.filter(f => f.date === today);
-const todayDiapers= kidDiapers.filter(d => d.date === today);
-const totalOz = todayFeeds.reduce((s, f) => s + (parseFloat(f.amount) || 0), 0);
-return (
-
+ {/* Quick stats for today */}
+ {(() => {
+ const todayFeeds = kidFeedings.filter(f => f.date === today);
+ const todayDiapers= kidDiapers.filter(d => d.date === today);
+ const totalOz = todayFeeds.reduce((s, f) => s + (parseFloat(f.amount) || 0), 0);
+ return (
  <div style={c.statGrid}>
  <div style={c.stat(theme.accent )}>
  <div style={{ ...c.statNum, color:theme.accent }}>{todayFeeds.length}</div>
  <div style={c.statLabel}>Feedings Today</div>
  </div>
  <div style={c.stat(theme.blue )}>
- <div style={{ ...c.statNum, color:theme.blue }}>{totalOz > 0 ? `${totalOz}oz` : "—"}</div>
+ <div style={{ ...c.statNum, color:theme.blue }}>{totalOz > 0 ? `${totalOz}oz` : "--"}</div>
  <div style={c.statLabel}>Oz Today</div>
  </div>
  <div style={c.stat(theme.yellow)}>
@@ -2540,16 +2474,15 @@ return (
  );
  })()}
 
-{/* Healthy range reminder */}
-
+ {/* Healthy range reminder */}
  <div style={{ ...c.card, background:"#faf8f5", border:`1px solid ${theme.yellow}44`, marginBottom:16 }}>
- <div style={{ fontWeight:500, fontSize:13, marginBottom:8 }}>What to Watch For (Newborn–3 months)</div>
+ <div style={{ fontWeight:500, fontSize:13, marginBottom:8 }}>What to Watch For (Newborn-3 months)</div>
  <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
  {[
- { label:"8–12 feedings/day", color:theme.accent },
+ { label:"8-12 feedings/day", color:theme.accent },
  { label:"6+ wet diapers/day after day 4", color:theme.blue },
- { label:"3–4 dirty diapers/day (newborn)", color:theme.green },
- { label:"Feed every 2–3 hours", color:theme.purple },
+ { label:"3-4 dirty diapers/day (newborn)", color:theme.green },
+ { label:"Feed every 2-3 hours", color:theme.purple },
  { label:"Alert your pediatrician if fewer than 6 wet diapers", color:theme.coral },
  ].map((tip, i) => (
  <span key={i} style={{ ...c.badge(tip.color), fontSize:12, padding:"6px 12px" }}>{tip.label}</span>
@@ -2557,15 +2490,13 @@ return (
  </div>
  </div>
 
-{/* Log buttons */}
-
+ {/* Log buttons */}
  <div style={{ display:"flex", gap:10, marginBottom:20, flexWrap:"wrap" }}>
  <button style={c.btn(theme.accent)} onClick={()=>openAdd("feedings",F.feeding,"feedings",true)}>Log Feeding</button>
  <button style={c.btn(theme.yellow)} onClick={()=>openAdd("diapers",F.diaper,"diapers",true)}>Log Diaper</button>
  </div>
 
-{/* Feeding log */}
-
+ {/* Feeding log */}
  <div style={c.sTitle}>Recent Feedings</div>
  {kidFeedings.length===0 && <div style={{ color:theme.muted, marginBottom:16 }}>No feedings logged yet.</div>}
  {[...kidFeedings].reverse().map(f=>(
@@ -2579,29 +2510,27 @@ return (
  </EntryCard>
  ))}
 
-{/* Diaper log */}
-
+ {/* Diaper log */}
  <div style={{ ...c.sTitle, marginTop:8 }}>Recent Diapers</div>
  {kidDiapers.length===0 && <div style={{ color:theme.muted }}>No diapers logged yet.</div>}
  {[...kidDiapers].reverse().map(d=>(
  <EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={d.id} item={d} dataKey="diapers" label={d.type} fields={F.diaper} kidScoped>
  <div style={{ display:"flex", justifyContent:"space-between" }}>
  <div style={{ fontWeight:500 }}>{d.type==="Wet"?"":d.type==="Dirty"?"":""} {d.type}</div>
- <div style={{ fontSize:13, color:theme.muted }}>{d.date} · {d.time}</div>
+ <div style={{ fontSize:13, color:theme.muted }}>{d.date} . {d.time}</div>
  </div>
  {d.notes&&<div style={{ fontSize:13, marginTop:4 }}>{d.notes}</div>}
  </EntryCard>
  ))}
  </>}
 
-{view===“kidSleepTab” && <>
-<PageHeader title=“Sleep Tracking & AI Planner” btnLabel=“Log Sleep” btnColor={theme.purple} onAdd={()=>openAdd(“kidSleep”,F.kidSleep,“kidSleep”,true)} />
+ {view==="kidSleepTab" && <>
+ <PageHeader title="Sleep Tracking & AI Planner" btnLabel="Log Sleep" btnColor={theme.purple} onAdd={()=>openAdd("kidSleep",F.kidSleep,"kidSleep",true)} />
 
-{/* AI Sleep Planner — Premium Feature */}
-<AISleepPlanner kid={selectedKid} sleepLog={kidSleepLog} />
+ {/* AI Sleep Planner -- Premium Feature */}
+ <AISleepPlanner kid={selectedKid} sleepLog={kidSleepLog} />
 
-{/* Sleep log */}
-
+ {/* Sleep log */}
  <div style={{ fontWeight:500, fontSize:16, margin:"8px 0 12px" }}>Sleep Log</div>
  {kidSleepLog.length===0&&<div style={{ color:theme.muted, marginBottom:16 }}>No sleep logged yet. Start logging to unlock AI-powered schedule predictions!</div>}
  {[...kidSleepLog].reverse().map(s=>(
@@ -2610,17 +2539,16 @@ return (
  <div style={{ fontWeight:500 }}>{s.type==="Nap"?" Nap":" Nighttime Sleep"}</div>
  <span style={c.badge(theme.purple)}>{s.duration} min</span>
  </div>
- <div style={{ fontSize:13, color:theme.muted }}>{s.date} · {s.start} → {s.end}</div>
+ <div style={{ fontSize:13, color:theme.muted }}>{s.date} . {s.start} â†’ {s.end}</div>
  {s.notes&&<div style={{ fontSize:13, marginTop:6 }}>{s.notes}</div>}
  </EntryCard>
  ))}
  </>}
 
-{view===“allergies” && <>
-<PageHeader title=“Allergies” btnLabel=“Add Allergy” btnColor={theme.coral} onAdd={()=>openAdd(“kidAllergies”,F.kidAllergy,“kidAllergies”,true)} />
+ {view==="allergies" && <>
+ <PageHeader title="Allergies" btnLabel="Add Allergy" btnColor={theme.coral} onAdd={()=>openAdd("kidAllergies",F.kidAllergy,"kidAllergies",true)} />
 
-{/* Important notice */}
-
+ {/* Important notice */}
  <div style={{ ...c.card, background:"linear-gradient(135deg,#fdf6f4,#faf8f5)", borderLeft:`4px solid ${theme.coral}`, marginBottom:16 }}>
  <div style={{ fontWeight:500, fontSize:14, color:theme.coral, marginBottom:6 }}>Medical Alert Information</div>
  <p style={{ margin:0, fontSize:13, lineHeight:1.7, color:theme.text }}>
@@ -2628,16 +2556,14 @@ return (
  </p>
  </div>
 
-{/* Severity legend */}
-
+ {/* Severity legend */}
  <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16 }}>
- {[{ label:"Mild — Local reaction", color:theme.green },{ label:"Moderate — Widespread reaction", color:theme.yellow },{ label:"Severe — Anaphylaxis Risk", color:theme.coral }].map((s,i)=>(
+ {[{ label:"Mild -- Local reaction", color:theme.green },{ label:"Moderate -- Widespread reaction", color:theme.yellow },{ label:"Severe -- Anaphylaxis Risk", color:theme.coral }].map((s,i)=>(
  <span key={i} style={{ ...c.badge(s.color), fontSize:11 }}>{s.label}</span>
  ))}
  </div>
 
-{kidAllergyList.length===0 && (
-
+ {kidAllergyList.length===0 && (
  <div style={{ ...c.card, textAlign:"center", color:theme.muted, padding:32 }}>
  <div style={{ fontSize:36, marginBottom:8 }}></div>
  <div style={{ fontWeight:500 }}>No allergies recorded</div>
@@ -2645,11 +2571,10 @@ return (
  </div>
  )}
 
-{kidAllergyList.map(a => {
-const sevColor = a.severity?.includes(“Severe”) ? theme.coral : a.severity===“Moderate” ? theme.yellow : theme.green;
-return (
-<EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={a.id} item={a} dataKey="kidAllergies" label={a.allergen} fields={F.kidAllergy} kidScoped>
-
+ {kidAllergyList.map(a => {
+ const sevColor = a.severity?.includes("Severe") ? theme.coral : a.severity==="Moderate" ? theme.yellow : theme.green;
+ return (
+ <EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={a.id} item={a} dataKey="kidAllergies" label={a.allergen} fields={F.kidAllergy} kidScoped>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8, flexWrap:"wrap", gap:6 }}>
  <div style={{ fontWeight:500, fontSize:17 }}> {a.allergen}</div>
  <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
@@ -2675,25 +2600,23 @@ return (
  <div style={{ fontSize:13, color:theme.text, lineHeight:1.6 }}>{a.actionPlan}</div>
  </div>
  )}
- <div style={{ fontSize:11, color:theme.muted, marginTop:4 }}>Diagnosed: {a.diagnosed}{a.notes ? ` · ${a.notes}` : ""}</div>
+ <div style={{ fontSize:11, color:theme.muted, marginTop:4 }}>Diagnosed: {a.diagnosed}{a.notes ? ` . ${a.notes}` : ""}</div>
  </EntryCard>
  );
  })}
 
-{/* Nurse tip */}
-
+ {/* Nurse tip */}
  <div style={{ ...c.card, background:"linear-gradient(135deg,#faf8f5,#f5f0ea)", marginTop:8 }}>
- <div style={{ fontWeight:500, fontSize:13, marginBottom:8 }}> Nurse Tip — Allergy Action Plans</div>
+ <div style={{ fontWeight:500, fontSize:13, marginBottom:8 }}> Nurse Tip -- Allergy Action Plans</div>
  <p style={{ margin:0, fontSize:13, lineHeight:1.8, color:theme.muted }}>
  Every child with a severe allergy should have a written <span style={{fontWeight:500}}>Allergy Action Plan</span> signed by their allergist or pediatrician. Share a copy with your child's school, daycare, and any caregivers. Make sure EpiPens are not expired and everyone who cares for your child knows how to use one.
  </p>
  </div>
  </>}
 
-{view===“tips” && <>
-
+ {view==="tips" && <>
  <h2 style={{ fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", fontSize:30, marginBottom:16 }}>Nurse Tips</h2>
- <InfoBanner gradient="#faf8f5">A little something to think about today — from one parent to another.</InfoBanner>
+ <InfoBanner gradient="#faf8f5">A little something to think about today -- from one parent to another.</InfoBanner>
  {nurseTips.map((t,i) => (
  <div key={i} style={{ ...c.card, borderLeft:`3px solid ${theme.accent}` }}>
  <p style={{ margin:0, fontSize:13, lineHeight:1.9, color:theme.text, fontFamily:"'Inter',sans-serif", fontWeight:400 }}>{t.tip}</p>
@@ -2703,9 +2626,8 @@ return (
  </div>
  </>)}
 
-{/* MOM */}
-{mainTab===“mom” && (<>
-
+ {/* MOM */}
+ {mainTab==="mom" && (<>
  <div style={{ background:"#faf8f5", borderBottom:`1px solid ${theme.border}`, padding:"10px 20px" }}>
  {/* Always visible: Dashboard + Trends */}
  <div style={{ display:"flex", gap:4, marginBottom:8 }}>
@@ -2724,7 +2646,7 @@ return (
  <details key={group.label} open={isActive} style={{ marginBottom:4 }}>
  <summary style={{ fontSize:10, fontWeight:500, letterSpacing:"0.1em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif", color:isActive?theme.accent:theme.muted, cursor:"pointer", padding:"4px 0", listStyle:"none", display:"flex", alignItems:"center", justifyContent:"center", gap:6, textAlign:"center" }}>
  {group.label}
- <span style={{ fontSize:10, color:theme.muted }}>{isActive ? "▲" : "▼"}</span>
+ <span style={{ fontSize:10, color:theme.muted }}>{isActive ? "â–²" : "â–¼"}</span>
  </summary>
  <div style={{ display:"flex", gap:4, flexWrap:"wrap", paddingTop:6, justifyContent:"center" }}>
  {group.tabs.map(t => (
@@ -2732,12 +2654,12 @@ return (
  ))}
  </div>
  </details>
- );
+  );
  })}
  </div>
  <div style={c.main}>
  {momView==="momDashboard" && <>
- <div style={{ marginBottom:24 }}><div style={{ fontSize:44, fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic" }}>Mama</div><div style={{ color:theme.muted, fontSize:14 }}>You take care of everyone — let's take care of you too.</div></div>
+ <div style={{ marginBottom:24 }}><div style={{ fontSize:44, fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic" }}>Mama</div><div style={{ color:theme.muted, fontSize:14 }}>You take care of everyone -- let's take care of you too.</div></div>
  <div style={c.statGrid}>
  <div style={c.stat(theme.accent )}><div style={{ ...c.statNum, color:theme.accent }}>{feedingSessions.length}</div><div style={c.statLabel}>Feeding Sessions</div></div>
  <div style={c.stat(theme.blue )}><div style={{ ...c.statNum, color:theme.blue }}>{totalCupsToday}</div><div style={c.statLabel}>Cups Today</div></div>
@@ -2749,10 +2671,10 @@ return (
  <div style={c.card}>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
  <div style={c.sTitle}>Mama's Schedule</div>
- <button style={{ background:"none", border:"none", color:theme.accent, cursor:"pointer", fontSize:11, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" }} onClick={()=>setMainTab("calendar")}>View All →</button>
+ <button style={{ background:"none", border:"none", color:theme.accent, cursor:"pointer", fontSize:11, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" }} onClick={()=>setMainTab("calendar")}>View All â†’</button>
  </div>
  {events.filter(e=>e.memberId==="mom"&&e.date>=today).length===0 ? (
- <div style={{ color:theme.muted, fontSize:13, fontFamily:"'Inter',sans-serif" }}>No upcoming appointments. <span style={{ color:theme.accent, cursor:"pointer" }} onClick={()=>setMainTab("calendar")}>Add one →</span></div>
+ <div style={{ color:theme.muted, fontSize:13, fontFamily:"'Inter',sans-serif" }}>No upcoming appointments. <span style={{ color:theme.accent, cursor:"pointer" }} onClick={()=>setMainTab("calendar")}>Add one â†’</span></div>
  ) : (
  <div>
  {events.filter(e=>e.memberId==="mom"&&e.date>=today).sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5).map((ev,i,arr)=>(
@@ -2764,7 +2686,7 @@ return (
  <div style={{ width:3, height:36, borderRadius:999, background:MEMBER_COLORS[0], flexShrink:0 }} />
  <div style={{ flex:1 }}>
  <div style={{ fontSize:13, fontFamily:"'Inter',sans-serif", color:theme.text }}>{ev.title}</div>
- <div style={{ fontSize:11, color:theme.muted, marginTop:2 }}>{ev.time?formatTime(ev.time):""}{ev.location?" · "+ev.location:""}</div>
+ <div style={{ fontSize:11, color:theme.muted, marginTop:2 }}>{ev.time?formatTime(ev.time):""}{ev.location?" . "+ev.location:""}</div>
  </div>
  </div>
  ))}
@@ -2772,7 +2694,7 @@ return (
  )}
  </div>
  <div style={c.card}>
- <div style={c.sTitle}> Today's Water — {totalCupsToday}/{waterGoal} cups</div>
+ <div style={c.sTitle}> Today's Water -- {totalCupsToday}/{waterGoal} cups</div>
  <div style={{ background:"#f3f6f8", borderRadius:999, height:14, overflow:"hidden", marginBottom:12 }}>
  <div style={{ width:`${waterPct}%`, background:`linear-gradient(90deg,${theme.blue},${theme.green})`, height:"100%", borderRadius:999, transition:"width 0.4s" }} />
  </div>
@@ -2780,14 +2702,12 @@ return (
  </div>
  </>}
 
-{momView===“momTrends” && <>
-
+ {momView==="momTrends" && <>
  <h2 style={{ margin:"0 0 16px", fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", fontSize:30 }}>Mama's Trends</h2>
- <InfoBanner gradient="#faf8f5">Your health patterns over time — because taking care of yourself matters just as much.</InfoBanner>
+ <InfoBanner gradient="#faf8f5">Your health patterns over time -- because taking care of yourself matters just as much.</InfoBanner>
 
-{/* Mood trend */}
-{momHealth.length >= 3 && (
-
+ {/* Mood trend */}
+ {momHealth.length >= 3 && (
  <div style={c.card}>
  <div style={c.sTitle}>Mood Over Time</div>
  <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
@@ -2796,7 +2716,7 @@ return (
  const col = moodColors[h.mood] || theme.muted;
  return (
  <div key={i} style={{ flex:1, minWidth:40, background:`${col}12`, border:`1px solid ${col}28`, borderRadius:6, padding:"8px 4px", textAlign:"center" }}>
- <div style={{ fontSize:11, fontWeight:300, color:col, fontFamily:"'Inter',sans-serif" }}>{h.mood?.slice(0,4)||"—"}</div>
+ <div style={{ fontSize:11, fontWeight:300, color:col, fontFamily:"'Inter',sans-serif" }}>{h.mood?.slice(0,4)||"--"}</div>
  <div style={{ fontSize:9, color:theme.muted, marginTop:2, fontFamily:"'Inter',sans-serif" }}>{h.date?.slice(5)||""}</div>
  </div>
  );
@@ -2805,9 +2725,8 @@ return (
  </div>
  )}
 
-{/* Sleep trend */}
-{momHealth.filter(h=>h.sleep).length >= 3 && (
-
+ {/* Sleep trend */}
+ {momHealth.filter(h=>h.sleep).length >= 3 && (
  <div style={c.card}>
  <div style={c.sTitle}>Sleep Hours</div>
  {(() => {
@@ -2834,11 +2753,10 @@ return (
  </div>
  )}
 
-{/* Hydration trend */}
-{waterLog.length >= 3 && (
-
+ {/* Hydration trend */}
+ {waterLog.length >= 3 && (
  <div style={c.card}>
- <div style={c.sTitle}>Hydration — Last 7 Days</div>
+ <div style={c.sTitle}>Hydration -- Last 7 Days</div>
  {(() => {
  const last7 = [...Array(7)].map((_,i)=>{
  const d = new Date(); d.setDate(d.getDate()-i);
@@ -2864,9 +2782,8 @@ return (
  </div>
  )}
 
-{/* Feeding summary */}
-{feedingSessions.length >= 3 && (
-
+ {/* Feeding summary */}
+ {feedingSessions.length >= 3 && (
  <div style={c.card}>
  <div style={c.sTitle}>Feeding Breakdown</div>
  {(() => {
@@ -2888,8 +2805,7 @@ return (
  </div>
  )}
 
-{momHealth.length < 3 && waterLog.length < 3 && (
-
+ {momHealth.length < 3 && waterLog.length < 3 && (
  <div style={{ ...c.card, textAlign:"center" }}>
  <div style={{ fontSize:22, fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", marginBottom:8 }}>Keep logging to see your trends</div>
  <div style={{ fontSize:13, color:theme.muted, fontFamily:"'Inter',sans-serif", lineHeight:1.8 }}>Log your mood, sleep, and waterLog daily and your trends will appear here automatically.</div>
@@ -2897,21 +2813,19 @@ return (
  )}
  </>}
 
-{momView===“reminders” && <>
-
+ {momView==="reminders" && <>
  <h2 style={{ margin:"0 0 16px", fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", fontSize:30 }}>Smart Reminders</h2>
- <InfoBanner gradient="#faf8f5">Reminders are sent as push notifications on your device. Premium feature — customize exactly what you want to be reminded about.</InfoBanner>
+ <InfoBanner gradient="#faf8f5">Reminders are sent as push notifications on your device. Premium feature -- customize exactly what you want to be reminded about.</InfoBanner>
 
-{[
-{ label:“Medication Reminders”, desc:“Get notified when it’s time for each medication — for you and the kids.”, color:theme.accent, toggle:true },
-{ label:“Appointment Alerts”, desc:“Reminder the day before and morning of every scheduled appointment.”, color:theme.blue, toggle:true },
-{ label:“Daily Water Check-in”, desc:“A gentle nudge if you haven’t logged your water goal by noon.”, color:theme.teal, toggle:false },
-{ label:“Vaccine Due Dates”, desc:“Notified 2 weeks before an upcoming vaccine is due based on the schedule.”, color:theme.green, toggle:true },
-{ label:“Pump Session Reminders”, desc:“Set recurring intervals to remind you to pump throughout the day.”, color:theme.purple, toggle:false },
-{ label:“Milestone Check-ins”, desc:“Monthly reminder to check in on developmental milestones for each child.”, color:theme.yellow, toggle:true },
-{ label:“Postpartum Check-up”, desc:“Reminder to book your 6-week postpartum visit if not already scheduled.”, color:theme.orange, toggle:true },
-].map((item,i)=>(
-
+ {[
+ { label:"Medication Reminders", desc:"Get notified when it's time for each medication -- for you and the kids.", color:theme.accent, toggle:true },
+ { label:"Appointment Alerts", desc:"Reminder the day before and morning of every scheduled appointment.", color:theme.blue, toggle:true },
+ { label:"Daily Water Check-in", desc:"A gentle nudge if you haven't logged your water goal by noon.", color:theme.teal, toggle:false },
+ { label:"Vaccine Due Dates", desc:"Notified 2 weeks before an upcoming vaccine is due based on the schedule.", color:theme.green, toggle:true },
+ { label:"Pump Session Reminders", desc:"Set recurring intervals to remind you to pump throughout the day.", color:theme.purple, toggle:false },
+ { label:"Milestone Check-ins", desc:"Monthly reminder to check in on developmental milestones for each child.", color:theme.yellow, toggle:true },
+ { label:"Postpartum Check-up", desc:"Reminder to book your 6-week postpartum visit if not already scheduled.", color:theme.orange, toggle:true },
+ ].map((item,i)=>(
  <div key={i} style={{ ...c.card, display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:16 }}>
  <div style={{ flex:1 }}>
  <div style={{ fontSize:13, fontWeight:500, fontFamily:"'Inter',sans-serif", marginBottom:4, color:item.color }}>{item.label}</div>
@@ -2931,27 +2845,25 @@ return (
  </div>
  </>}
 
-{momView===“reports” && <>
-
+ {momView==="reports" && <>
  <h2 style={{ margin:"0 0 16px", fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", fontSize:30 }}>Health Reports</h2>
- <InfoBanner gradient="#faf8f5">Generate a PDF summary to bring to any appointment — for you or your children. Premium feature.</InfoBanner>
+ <InfoBanner gradient="#faf8f5">Generate a PDF summary to bring to any appointment -- for you or your children. Premium feature.</InfoBanner>
 
-{/* Report types */}
-{[
-{ title:“Child Health Summary”, desc:“Full health record for any child — symptoms, medications, vaccines, growth, vitals, allergies, and visit history. Perfect for a new pediatrician or specialist.”, color:theme.accent, forKid:true },
-{ title:“Vaccination Record”, desc:“Complete vaccine history with dates and lot numbers. Formatted for school enrollment, travel, or a new provider.”, color:theme.green, forKid:true },
-{ title:“Growth Chart Report”, desc:“Height, weight, and head circumference over time with a visual chart included.”, color:theme.teal, forKid:true },
-{ title:“Postpartum Health Summary”, desc:“Your mood, sleep, pain, vitals, medications, and feeding logs in one document. Useful for your OB or midwife.”, color:theme.purple, forKid:false },
-{ title:“Feeding & Pumping Log”, desc:“Detailed feeding session and pump history with totals and averages — helpful for a lactation consultant visit.”, color:theme.orange, forKid:false },
-{ title:“Full Family Export”, desc:“Everything — all children and mama health data — exported as a complete archive.”, color:theme.blue, forKid:null },
-].map((report,i)=>(
-
+ {/* Report types */}
+ {[
+ { title:"Child Health Summary", desc:"Full health record for any child -- symptoms, medications, vaccines, growth, vitals, allergies, and visit history. Perfect for a new pediatrician or specialist.", color:theme.accent, forKid:true },
+ { title:"Vaccination Record", desc:"Complete vaccine history with dates and lot numbers. Formatted for school enrollment, travel, or a new provider.", color:theme.green, forKid:true },
+ { title:"Growth Chart Report", desc:"Height, weight, and head circumference over time with a visual chart included.", color:theme.teal, forKid:true },
+ { title:"Postpartum Health Summary", desc:"Your mood, sleep, pain, vitals, medications, and feeding logs in one document. Useful for your OB or midwife.", color:theme.purple, forKid:false },
+ { title:"Feeding & Pumping Log", desc:"Detailed feeding session and pump history with totals and averages -- helpful for a lactation consultant visit.", color:theme.orange, forKid:false },
+ { title:"Full Family Export", desc:"Everything -- all children and mama health data -- exported as a complete archive.", color:theme.blue, forKid:null },
+ ].map((report,i)=>(
  <div key={i} style={{ ...c.card, cursor:"pointer" }}>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
  <div style={{ flex:1 }}>
  <div style={{ fontSize:13, fontWeight:500, fontFamily:"'Inter',sans-serif", color:report.color, marginBottom:4 }}>{report.title}</div>
  <div style={{ fontSize:12, color:theme.muted, lineHeight:1.7, fontFamily:"'Inter',sans-serif" }}>{report.desc}</div>
- {report.forKid===true && <div style={{ fontSize:10, color:theme.accent, marginTop:6, letterSpacing:"0.06em", fontFamily:"'Inter',sans-serif", cursor:"pointer" }} onClick={()=>setMainTab("kids")}>Go to My Kids → Reports tab →</div>}
+ {report.forKid===true && <div style={{ fontSize:10, color:theme.accent, marginTop:6, letterSpacing:"0.06em", fontFamily:"'Inter',sans-serif", cursor:"pointer" }} onClick={()=>setMainTab("kids")}>Go to My Kids â†’ Reports tab â†’</div>}
  </div>
  <div style={{ marginLeft:16, padding:"8px 16px", borderRadius:4, background:`${report.color}12`, border:`1px solid ${report.color}33`, fontSize:11, fontWeight:500, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif", color:report.color, whiteSpace:"nowrap", flexShrink:0 }}>
  Export PDF
@@ -2968,17 +2880,16 @@ return (
  </div>
  </>}
 
-{momView===“feeding” && <>
-<PageHeader title=“Feeding Tracker” btnLabel=“Log Session” onAdd={()=>openAdd(“feedingSessions”,F.momFeeding,“feedingSessions”)} />
-<InfoBanner gradient="linear-gradient(135deg,#faf8f5,#f5f0ea)">
-Every feeding journey is valid — breastfeeding, pumping, formula, or a combination. Log whatever works best for you and your baby.
-</InfoBanner>
+ {momView==="feeding" && <>
+ <PageHeader title="Feeding Tracker" btnLabel="Log Session" onAdd={()=>openAdd("feedingSessions",F.momFeeding,"feedingSessions")} />
+ <InfoBanner gradient="linear-gradient(135deg,#faf8f5,#f5f0ea)">
+ Every feeding journey is valid -- breastfeeding, pumping, formula, or a combination. Log whatever works best for you and your baby. 
+ </InfoBanner>
 
-{/* Breastfeeding Side Timer */}
-<BreastfeedingTimer onSave={(session) => setFeedingSessions(prev => [{ id:Date.now(), …session }, …prev])} />
+ {/* Breastfeeding Side Timer */}
+ <BreastfeedingTimer onSave={(session) => setFeedingSessions(prev => [{ id:Date.now(), ...session }, ...prev])} />
 
-{/* Feeding summary stats */}
-
+ {/* Feeding summary stats */}
  <div style={c.statGrid}>
  <div style={c.stat(theme.accent)}>
  <div style={{ ...c.statNum, color:theme.accent }}>{feedingSessions.filter(f=>f.type==="Breastfeed").length}</div>
@@ -3000,8 +2911,7 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  </div>
  </div>
 
-{/* Session log */}
-
+ {/* Session log */}
  <div style={{ fontWeight:500, fontSize:15, margin:"8px 0 12px" }}> Recent Sessions</div>
  {feedingSessions.length===0 && <div style={{ color:theme.muted }}>No sessions logged yet.</div>}
  {[...feedingSessions].reverse().map(f=>{
@@ -3020,7 +2930,7 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  </div>
  </div>
  <div style={{ fontSize:13, color:theme.muted, marginBottom:4 }}>
- {f.date} at {f.time}{f.duration ? ` · ${f.duration} mins` : ""}
+ {f.date} at {f.time}{f.duration ? ` . ${f.duration} mins` : ""}
  </div>
  {isFormula && f.formulaBrand && (
  <div style={{ fontSize:13, marginBottom:4 }}>
@@ -3033,11 +2943,10 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  })}
  </>}
 
-{momView===“pumping” && <>
-<PageHeader title="Pumping Tracker" />
+ {momView==="pumping" && <>
+ <PageHeader title="Pumping Tracker" />
 
-{/* Storage guidelines */}
-
+ {/* Storage guidelines */}
  <div style={{ ...c.card, background:"linear-gradient(135deg,#e8f4ff,#f5eeff)", border:"none", marginBottom:16 }}>
  <div style={{ fontWeight:500, fontSize:14, marginBottom:10, color:theme.blue }}>CDC Breast Milk Storage Guidelines</div>
  <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
@@ -3053,11 +2962,10 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  </div>
  ))}
  </div>
- <div style={{ fontSize:11, color:theme.muted, marginTop:8 }}>Source: CDC · Always use oldest milk first (FIFO). Use within 24 hrs once thawed.</div>
+ <div style={{ fontSize:11, color:theme.muted, marginTop:8 }}>Source: CDC . Always use oldest milk first (FIFO). Use within 24 hrs once thawed.</div>
  </div>
 
-{/* Inventory summary */}
-
+ {/* Inventory summary */}
  <div style={c.statGrid}>
  <div style={c.stat(theme.blue)}>
  <div style={{ ...c.statNum, color:theme.blue }}>{fridgeOz.toFixed(1)}<span style={{ fontSize:13 }}>oz</span></div>
@@ -3077,17 +2985,15 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  </div>
  </div>
 
-{/* Action buttons */}
-
+ {/* Action buttons */}
  <div style={{ display:"flex", gap:10, marginBottom:16, flexWrap:"wrap" }}>
  <button style={c.btn(theme.accent)} onClick={()=>openAdd("pumpSessions",F.pumpSession,"pumpSessions")}>Log Pump Session</button>
  <button style={c.btn(theme.blue)} onClick={()=>openAdd("milkInventory",F.milkEntry,"milkInventory")}>Add Inventory</button>
  <button style={{ ...c.btn(theme.coral), flex:1 }} onClick={()=>setShowUseModal(true)}>Use Milk</button>
  </div>
 
-{/* Use milk modal */}
-{showUseModal && (
-
+ {/* Use milk modal */}
+ {showUseModal && (
  <div style={c.overlay} onClick={()=>setShowUseModal(false)}>
  <div style={{ ...c.modalBox, maxWidth:380 }} onClick={e=>e.stopPropagation()}>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20 }}>
@@ -3095,7 +3001,7 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  <button onClick={()=>setShowUseModal(false)} style={{ background:"none", border:"none", color:theme.muted, cursor:"pointer", fontSize:20 }}></button>
  </div>
  <div style={{ marginBottom:8, fontSize:13, color:theme.muted, lineHeight:1.7 }}>
- Milk will be deducted automatically — fridge first, then freezer, oldest first (FIFO).
+ Milk will be deducted automatically -- fridge first, then freezer, oldest first (FIFO).
  </div>
  <div style={{ ...c.card, background:`${theme.green}10`, border:`1px solid ${theme.green}33`, marginBottom:14 }}>
  <div style={{ fontSize:13, color:theme.muted }}>Total available</div>
@@ -3106,7 +3012,7 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  <input style={c.input} type="number" placeholder="e.g. 4" value={useOz} onChange={e=>setUseOz(e.target.value)} />
  </div>
  <div style={{ marginBottom:20 }}>
- <label style={c.label}>Note (optional — e.g. "at daycare" or "grandma's")</label>
+ <label style={c.label}>Note (optional -- e.g. "at daycare" or "grandma's")</label>
  <input style={c.input} placeholder="e.g. Work day - left with nanny" value={useNote} onChange={e=>setUseNote(e.target.value)} />
  </div>
  {parseFloat(useOz) > totalAvail && (
@@ -3120,17 +3026,15 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  </div>
  )}
 
-{/* Nurse tip */}
-
+ {/* Nurse tip */}
  <div style={{ ...c.card, background:"linear-gradient(135deg,#faf8f5,#f5f0ea)", border:"none", marginBottom:16 }}>
- <div style={{ fontWeight:500, fontSize:13, marginBottom:6 }}> Nurse Tip — Pumping Schedule</div>
+ <div style={{ fontWeight:500, fontSize:13, marginBottom:6 }}> Nurse Tip -- Pumping Schedule</div>
  <p style={{ margin:0, fontSize:13, lineHeight:1.8, color:theme.muted }}>
- Aim to pump as often as your baby feeds — typically every 2–3 hours. Consistent pumping signals your body to maintain supply. Power pumping (pump 20 min, rest 10, pump 10, rest 10, pump 10) can help boost supply. Stay hydrated and add a feeding or pump session if supply dips.
+ Aim to pump as often as your baby feeds -- typically every 2-3 hours. Consistent pumping signals your body to maintain supply. Power pumping (pump 20 min, rest 10, pump 10, rest 10, pump 10) can help boost supply. Stay hydrated and add a feeding or pump session if supply dips.
  </p>
  </div>
 
-{/* Milk inventory */}
-
+ {/* Milk inventory */}
  <div style={{ fontWeight:500, fontSize:15, margin:"8px 0 12px" }}>Milk Inventory</div>
  {milkInventory.filter(m=>!m.used).length===0 && <div style={{ color:theme.muted, marginBottom:16 }}>No milk in inventory. Add a pump session or log inventory manually.</div>}
  {milkInventory.filter(m=>!m.used).sort((a,b)=>{
@@ -3162,14 +3066,13 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  );
  })}
 
-{/* Recently used */}
-{milkInventory.filter(m=>m.used).length > 0 && <>
-
+ {/* Recently used */}
+ {milkInventory.filter(m=>m.used).length > 0 && <>
  <div style={{ fontWeight:500, fontSize:15, margin:"16px 0 12px", color:theme.muted }}>Recently Used</div>
  {milkInventory.filter(m=>m.used).slice(-3).map(item=>(
  <div key={item.id} style={{ ...c.card, opacity:0.7 }}>
  <div style={{ display:"flex", justifyContent:"space-between" }}>
- <div style={{ fontWeight:500, color:theme.muted }}> {item.label} — {item.oz} oz</div>
+ <div style={{ fontWeight:500, color:theme.muted }}> {item.label} -- {item.oz} oz</div>
  <span style={c.badge(theme.muted)}>Used {item.usedDate||""}</span>
  </div>
  {item.usedNote && <div style={{ fontSize:12, color:theme.muted, marginTop:4 }}>{item.usedNote}</div>}
@@ -3177,12 +3080,11 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  ))}
  </>}
 
-{/* Pump session log */}
-
+ {/* Pump session log */}
  <div style={{ fontWeight:500, fontSize:15, margin:"16px 0 12px" }}>Pump Session Log</div>
  {pumpSessions.length===0 && <div style={{ color:theme.muted }}>No sessions logged yet.</div>}
  {[...pumpSessions].reverse().map(s=>(
- <EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={s.id} item={s} dataKey="pumpSessions" label={`${s.date} — ${s.totalOz}oz`} fields={F.pumpSession}>
+ <EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={s.id} item={s} dataKey="pumpSessions" label={`${s.date} -- ${s.totalOz}oz`} fields={F.pumpSession}>
  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
  <div style={{ fontWeight:500 }}> {s.date} at {s.time}</div>
  <span style={c.badge(theme.accent)}>{s.totalOz} oz total</span>
@@ -3201,11 +3103,10 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  ))}
  </>}
 
-{momView===“hydration” && <>
-<PageHeader title=“Hydration Tracker” btnLabel=“Log Water” btnColor={theme.blue} onAdd={()=>openAdd(“waterLog”,F.water,“waterLog”)} />
-
+ {momView==="hydration" && <>
+ <PageHeader title="Hydration Tracker" btnLabel="Log Water" btnColor={theme.blue} onAdd={()=>openAdd("waterLog",F.water,"waterLog")} />
  <div style={c.card}>
- <div style={c.sTitle}>Today — {totalCupsToday}/{waterGoal} cups</div>
+ <div style={c.sTitle}>Today -- {totalCupsToday}/{waterGoal} cups</div>
  <div style={{ background:"#f3f6f8", borderRadius:999, height:18, overflow:"hidden", marginBottom:14 }}>
  <div style={{ width:`${waterPct}%`, background:`linear-gradient(90deg,${theme.blue},${theme.green})`, height:"100%", borderRadius:999, transition:"width 0.4s" }} />
  </div>
@@ -3216,18 +3117,17 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  <div style={c.sTitle}>Log History</div>
  {[...waterLog].reverse().map(w=>(
  <EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={w.id} item={w} dataKey="waterLog" label={`${w.cups} cups`} fields={F.water}>
- <div style={{ display:"flex", justifyContent:"space-between" }}><div style={{ fontWeight:500 }}> {w.cups} cup{w.cups>1?"s":""}</div><div style={{ fontSize:13, color:theme.muted }}>{w.date} · {w.time}</div></div>
+ <div style={{ display:"flex", justifyContent:"space-between" }}><div style={{ fontWeight:500 }}> {w.cups} cup{w.cups>1?"s":""}</div><div style={{ fontSize:13, color:theme.muted }}>{w.date} . {w.time}</div></div>
  </EntryCard>
  ))}
  </div>
  </>}
 
-{momView===“nutrition” && <>
-<PageHeader title=“Nutrition Log” btnLabel=“Log Meal” btnColor={theme.green} onAdd={()=>openAdd(“nutritionLog”,F.nutrition,“nutritionLog”)} />
-<InfoBanner gradient="linear-gradient(135deg,#f0fff8,#fffbea)">Focus on protein, iron, and calcium — especially important postpartum and while breastfeeding.</InfoBanner>
-{[…nutritionLog].reverse().map(n=>(
-<EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={n.id} item={n} dataKey="nutritionLog" label={n.meal} fields={F.nutrition}>
-
+ {momView==="nutrition" && <>
+ <PageHeader title="Nutrition Log" btnLabel="Log Meal" btnColor={theme.green} onAdd={()=>openAdd("nutritionLog",F.nutrition,"nutritionLog")} />
+ <InfoBanner gradient="linear-gradient(135deg,#f0fff8,#fffbea)">Focus on protein, iron, and calcium -- especially important postpartum and while breastfeeding.</InfoBanner>
+ {[...nutritionLog].reverse().map(n=>(
+ <EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={n.id} item={n} dataKey="nutritionLog" label={n.meal} fields={F.nutrition}>
  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}><div style={{ fontWeight:500 }}> {n.meal}</div><div style={{ fontSize:13, color:theme.muted }}>{n.date}</div></div>
  <div style={{ fontSize:14, marginBottom:10 }}>{n.foods}</div>
  <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
@@ -3239,23 +3139,21 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  ))}
  </>}
 
-{momView===“cycle” && <>
-<PageHeader title=“Cycle Tracker” btnLabel=“Log Cycle” onAdd={()=>openAdd(“cycles”,F.cycle,“cycles”)} />
-<InfoBanner gradient="linear-gradient(135deg,#f5f0ea,#ede8e0)">Postpartum periods can be irregular — tracking helps you know your new normal.</InfoBanner>
-{cycles.length===0&&<div style={{ color:theme.muted }}>No cycles logged yet.</div>}
-{[…cycles].reverse().map(cyc=>(
-<EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={cyc.id} item={cyc} dataKey="cycles" label="Cycle" fields={F.cycle}>
-
+ {momView==="cycle" && <>
+ <PageHeader title="Cycle Tracker" btnLabel="Log Cycle" onAdd={()=>openAdd("cycles",F.cycle,"cycles")} />
+ <InfoBanner gradient="linear-gradient(135deg,#f5f0ea,#ede8e0)">Postpartum periods can be irregular -- tracking helps you know your new normal.</InfoBanner>
+ {cycles.length===0&&<div style={{ color:theme.muted }}>No cycles logged yet.</div>}
+ {[...cycles].reverse().map(cyc=>(
+ <EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={cyc.id} item={cyc} dataKey="cycles" label="Cycle" fields={F.cycle}>
  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:8 }}><div style={{ fontWeight:500 }}> Cycle</div><span style={c.badge(flowColor(cyc.flow))}>{cyc.flow} Flow</span></div>
- <div style={{ fontSize:13, color:theme.muted }}>Start: {cyc.startDate} · End: {cyc.endDate||"Ongoing"}</div>
+ <div style={{ fontSize:13, color:theme.muted }}>Start: {cyc.startDate} . End: {cyc.endDate||"Ongoing"}</div>
  {cyc.symptoms&&<div style={{ fontSize:13, marginTop:6 }}>Symptoms: {cyc.symptoms}</div>}
  </EntryCard>
  ))}
  </>}
 
-{momView===“momVitalsTab” && <>
-<PageHeader title=” My Vitals & Labs” btnLabel=”+ Log Vitals” btnColor={theme.coral} onAdd={()=>openAdd(“momVitals”,F.momVital,“momVitals”)} />
-
+ {momView==="momVitalsTab" && <>
+ <PageHeader title=" My Vitals & Labs" btnLabel="+ Log Vitals" btnColor={theme.coral} onAdd={()=>openAdd("momVitals",F.momVital,"momVitals")} />
  <div style={{ marginBottom:16 }}><button style={c.smallBtn(theme.blue)} onClick={()=>openAdd("momLabs",F.momLab,"momLabs")}>Add Lab Result</button></div>
  <div style={c.sTitle}>Vital Signs</div>
  {momVitals.length===0&&<div style={{ color:theme.muted, marginBottom:16 }}>No vitals logged yet.</div>}
@@ -3265,20 +3163,18 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  {momLabs.map(l=><LabCard key={l.id} lab={l} dataKey="momLabs" fields={F.momLab} />)}
  </>}
 
-{momView===“momMeds” && <>
-<PageHeader title=“My Medications” btnLabel=”+ Add Med” onAdd={()=>openAdd(“momMeds”,F.momMed,“momMeds”)} />
-<InfoBanner>Track your postpartum vitamins, supplements, and prescriptions.</InfoBanner>
-{momMeds.map(m=>(
-<EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={m.id} item={m} dataKey="momMeds" label={m.name} fields={F.momMed}>
-
+ {momView==="momMeds" && <>
+ <PageHeader title="My Medications" btnLabel="+ Add Med" onAdd={()=>openAdd("momMeds",F.momMed,"momMeds")} />
+ <InfoBanner>Track your postpartum vitamins, supplements, and prescriptions.</InfoBanner>
+ {momMeds.map(m=>(
+ <EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={m.id} item={m} dataKey="momMeds" label={m.name} fields={F.momMed}>
  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}><div style={{ fontWeight:500 }}> {m.name}</div><span style={c.badge(m.active?theme.green:theme.muted)}>{m.active?"Active":"Inactive"}</span></div>
- <div style={{ fontSize:13, color:theme.muted }}>Dose: {m.dose} · {m.freq} · Started {m.startDate}</div>
+ <div style={{ fontSize:13, color:theme.muted }}>Dose: {m.dose} . {m.freq} . Started {m.startDate}</div>
  </EntryCard>
  ))}
  </>}
 
-{momView===“momVisits” && <>
-
+ {momView==="momVisits" && <>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, flexWrap:"wrap", gap:10 }}>
  <h2 style={{ margin:0, fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", fontSize:30 }}>My Visits</h2>
  <div style={{ display:"flex", gap:8 }}>
@@ -3286,7 +3182,7 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  <button style={c.btn()} onClick={()=>openAdd("momVisits",F.visit,"momVisits")}>Add Visit</button>
  </div>
  </div>
- <InfoBanner gradient="#faf8f5">Keep track of your own appointments — OB, midwife, therapist, specialist, or any provider.</InfoBanner>
+ <InfoBanner gradient="#faf8f5">Keep track of your own appointments -- OB, midwife, therapist, specialist, or any provider.</InfoBanner>
  {showMamaScanner && (
  <VisitScanner
  kid={{ name:"Mama", id:"mom" }}
@@ -3298,7 +3194,7 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  {[...momVisits].reverse().map(v=>(
  <EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={v.id} item={v} dataKey="momVisits" label={v.reason} fields={F.visit}>
  <div style={{ fontWeight:500, fontSize:13, marginBottom:4, fontFamily:"'Inter',sans-serif" }}>{v.reason}</div>
- <div style={{ fontSize:12, color:theme.muted }}>{v.date}{v.doctor?" · "+v.doctor:""}{v.clinic?" · "+v.clinic:""}</div>
+ <div style={{ fontSize:12, color:theme.muted }}>{v.date}{v.doctor?" . "+v.doctor:""}{v.clinic?" . "+v.clinic:""}</div>
  {v.diagnosis && <div style={{ fontSize:12, marginTop:6 }}><span style={{ color:theme.muted, letterSpacing:"0.04em", textTransform:"uppercase", fontSize:10 }}>Diagnosis </span>{v.diagnosis}</div>}
  {v.followUp && <div style={{ fontSize:12, marginTop:4 }}><span style={{ color:theme.muted, letterSpacing:"0.04em", textTransform:"uppercase", fontSize:10 }}>Follow-up </span>{v.followUp}</div>}
  {v.notes && <div style={{ fontSize:13, color:theme.muted, marginTop:6, fontStyle:"italic", fontFamily:"'Cormorant Garamond',serif" }}>{v.notes}</div>}
@@ -3306,12 +3202,11 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  ))}
  </>}
 
-{momView===“momHealthTab” && <>
-<PageHeader title=“My Health” btnLabel=“Log Today” btnColor={theme.green} onAdd={()=>openAdd(“momHealth”,F.momHealth,“momHealth”)} />
-<InfoBanner gradient="linear-gradient(135deg,#f3f7f5,#f0f5f7)">Track mood, sleep, and pain to see patterns and advocate for yourself.</InfoBanner>
-{[…momHealth].reverse().map(h=>(
-<EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={h.id} item={h} dataKey=“momHealth” label={`Health ${h.date}`} fields={F.momHealth}>
-
+ {momView==="momHealthTab" && <>
+ <PageHeader title="My Health" btnLabel="Log Today" btnColor={theme.green} onAdd={()=>openAdd("momHealth",F.momHealth,"momHealth")} />
+ <InfoBanner gradient="linear-gradient(135deg,#f3f7f5,#f0f5f7)">Track mood, sleep, and pain to see patterns and advocate for yourself.</InfoBanner>
+ {[...momHealth].reverse().map(h=>(
+ <EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={h.id} item={h} dataKey="momHealth" label={`Health ${h.date}`} fields={F.momHealth}>
  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:12 }}><div style={{ fontSize:13, color:theme.muted }}>{h.date}</div><span style={c.badge(moodColor(h.mood))}>{h.mood}</span></div>
  <div style={{ display:"flex", gap:28 }}>
  <div><div style={{ fontSize:22, fontWeight:500, color:theme.blue }}>{h.sleep}h</div><div style={{ fontSize:11, color:theme.muted }}>Sleep</div></div>
@@ -3322,43 +3217,41 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  ))}
  </>}
 
-{momView===“postpartum” && <>
-
+ {momView==="postpartum" && <>
  <h2 style={{ fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", fontSize:30, marginBottom:16 }}>Postpartum Care</h2>
- <InfoBanner gradient="#faf8f5">A guide through the fourth trimester — your physical recovery, mental health, and the science behind what your body is going through.</InfoBanner>
+ <InfoBanner gradient="#faf8f5">A guide through the fourth trimester -- your physical recovery, mental health, and the science behind what your body is going through.</InfoBanner>
 
-{/* PPD */}
-
+ {/* PPD */}
  <div style={{ background:"#ffffff", border:"1px solid #e8e2db", borderLeft:"3px solid #b5836a", borderRadius:6, padding:20, marginBottom:12, cursor:"pointer" }} onClick={()=>setPpSection(ppSection==="ppd"?null:"ppd")}>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
  <div>
  <div style={{ fontSize:13, fontWeight:500, color:"#b5836a", fontFamily:"'Inter',sans-serif", marginBottom:2 }}>Postpartum Depression (PPD)</div>
- <div style={{ fontSize:11, color:"#8a8480", fontFamily:"'Inter',sans-serif" }}>Affects 1 in 7 mothers — not your fault, highly treatable.</div>
+ <div style={{ fontSize:11, color:"#8a8480", fontFamily:"'Inter',sans-serif" }}>Affects 1 in 7 mothers -- not your fault, highly treatable.</div>
  </div>
- <div style={{ fontSize:12, color:"#8a8480" }}>{ppSection==="ppd"?"▲":"▼"}</div>
+ <div style={{ fontSize:12, color:"#8a8480" }}>{ppSection==="ppd"?"â–²":"â–¼"}</div>
  </div>
  {ppSection==="ppd" && (
  <div style={{ marginTop:14, borderTop:"1px solid #e8e2db", paddingTop:14 }}>
- <p style={{ margin:"0 0 12px", fontSize:13, lineHeight:1.8, color:"#1a1a1a", fontFamily:"'Inter',sans-serif" }}>PPD is caused by a rapid drop in hormones after birth. It is a medical condition with a biological cause — not weakness — and it is highly treatable.</p>
+ <p style={{ margin:"0 0 12px", fontSize:13, lineHeight:1.8, color:"#1a1a1a", fontFamily:"'Inter',sans-serif" }}>PPD is caused by a rapid drop in hormones after birth. It is a medical condition with a biological cause -- not weakness -- and it is highly treatable.</p>
  <div style={{ display:"flex", gap:10, marginBottom:12, flexWrap:"wrap" }}>
  <div style={{ flex:1, minWidth:160, background:"#faf8f5", borderRadius:6, padding:12 }}>
  <div style={{ fontSize:11, color:"#c9a96e", fontWeight:500, marginBottom:6, fontFamily:"'Inter',sans-serif" }}>Baby Blues (Normal)</div>
- {["Tearfulness, mood swings","Feeling overwhelmed","Irritability","Resolves within 2 weeks"].map((s,i)=><div key={i} style={{ fontSize:12, color:"#1a1a1a", padding:"3px 0", borderBottom:"1px solid #e8e2db" }}>• {s}</div>)}
+ {["Tearfulness, mood swings","Feeling overwhelmed","Irritability","Resolves within 2 weeks"].map((s,i)=><div key={i} style={{ fontSize:12, color:"#1a1a1a", padding:"3px 0", borderBottom:"1px solid #e8e2db" }}>â€¢ {s}</div>)}
  </div>
  <div style={{ flex:1, minWidth:160, background:"#faf8f5", borderRadius:6, padding:12 }}>
  <div style={{ fontSize:11, color:"#b5836a", fontWeight:500, marginBottom:6, fontFamily:"'Inter',sans-serif" }}>PPD (Seek help)</div>
- {["Persistent sadness beyond 2 weeks","Feeling disconnected from baby","Loss of interest in things you loved","Feelings of hopelessness","Difficulty bonding"].map((s,i)=><div key={i} style={{ fontSize:12, color:"#1a1a1a", padding:"3px 0", borderBottom:"1px solid #e8e2db" }}>• {s}</div>)}
+ {["Persistent sadness beyond 2 weeks","Feeling disconnected from baby","Loss of interest in things you loved","Feelings of hopelessness","Difficulty bonding"].map((s,i)=><div key={i} style={{ fontSize:12, color:"#1a1a1a", padding:"3px 0", borderBottom:"1px solid #e8e2db" }}>â€¢ {s}</div>)}
  </div>
  </div>
  <div style={{ fontSize:11, color:"#c0614a", fontStyle:"italic", marginBottom:12, fontFamily:"'Cormorant Garamond',serif" }}>If you are having thoughts of harming yourself or your baby, call or text 988 or go to your nearest ER immediately.</div>
- {[{t:"Therapy",d:"CBT and Interpersonal Therapy are highly effective. Many therapists offer telehealth."},{t:"Medication",d:"SSRIs are safe for most breastfeeding moms and very effective."},{t:"Support groups",d:"PSI offers free online groups. Finding your people is powerful."},{t:"Sleep and support",d:"Ask for help so you can rest — this is medical, not laziness."}].map((item,i)=>(
+ {[{t:"Therapy",d:"CBT and Interpersonal Therapy are highly effective. Many therapists offer telehealth."},{t:"Medication",d:"SSRIs are safe for most breastfeeding moms and very effective."},{t:"Support groups",d:"PSI offers free online groups. Finding your people is powerful."},{t:"Sleep and support",d:"Ask for help so you can rest -- this is medical, not laziness."}].map((item,i)=>(
  <div key={i} style={{ padding:"8px 12px", background:"rgba(181,131,106,0.08)", borderRadius:6, marginBottom:6 }}>
  <div style={{ fontSize:12, fontWeight:500, fontFamily:"'Inter',sans-serif" }}>{item.t}</div>
  <div style={{ fontSize:12, color:"#8a8480", lineHeight:1.6, marginTop:2 }}>{item.d}</div>
  </div>
  ))}
  <div style={{ display:"flex", flexDirection:"column", gap:6, marginTop:12 }}>
- {[{name:"Postpartum Support International",contact:"1-800-944-4773",color:"#b5836a"},{name:"988 Suicide and Crisis Lifeline",contact:"Call or text 988 — 24/7",color:"#c0614a"},{name:"SAMHSA Helpline",contact:"1-800-662-4357 — free, confidential",color:"#7a96a8"}].map((r,i)=>(
+ {[{name:"Postpartum Support International",contact:"1-800-944-4773",color:"#b5836a"},{name:"988 Suicide and Crisis Lifeline",contact:"Call or text 988 -- 24/7",color:"#c0614a"},{name:"SAMHSA Helpline",contact:"1-800-662-4357 -- free, confidential",color:"#7a96a8"}].map((r,i)=>(
  <div key={i} style={{ padding:"8px 12px", background:r.color+"10", border:"1px solid "+r.color+"33", borderRadius:6 }}>
  <div style={{ fontSize:12, fontWeight:500, color:r.color, fontFamily:"'Inter',sans-serif" }}>{r.name}</div>
  <div style={{ fontSize:11, color:"#8a8480", marginTop:2, fontFamily:"'Inter',sans-serif" }}>{r.contact}</div>
@@ -3369,21 +3262,20 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  )}
  </div>
 
-{/* PPA */}
-
+ {/* PPA */}
  <div style={{ background:"#ffffff", border:"1px solid #e8e2db", borderLeft:"3px solid #8f8aa0", borderRadius:6, padding:20, marginBottom:12, cursor:"pointer" }} onClick={()=>setPpSection(ppSection==="ppa"?null:"ppa")}>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
  <div>
  <div style={{ fontSize:13, fontWeight:500, color:"#8f8aa0", fontFamily:"'Inter',sans-serif", marginBottom:2 }}>Postpartum Anxiety (PPA)</div>
- <div style={{ fontSize:11, color:"#8a8480", fontFamily:"'Inter',sans-serif" }}>Affects 1 in 5 mothers — often goes unrecognized.</div>
+ <div style={{ fontSize:11, color:"#8a8480", fontFamily:"'Inter',sans-serif" }}>Affects 1 in 5 mothers -- often goes unrecognized.</div>
  </div>
- <div style={{ fontSize:12, color:"#8a8480" }}>{ppSection==="ppa"?"▲":"▼"}</div>
+ <div style={{ fontSize:12, color:"#8a8480" }}>{ppSection==="ppa"?"â–²":"â–¼"}</div>
  </div>
  {ppSection==="ppa" && (
  <div style={{ marginTop:14, borderTop:"1px solid #e8e2db", paddingTop:14 }}>
  <p style={{ margin:"0 0 12px", fontSize:13, lineHeight:1.8, color:"#1a1a1a", fontFamily:"'Inter',sans-serif" }}>The postpartum brain is wired for hypervigilance to protect a newborn. When amplified by hormonal changes and sleep deprivation, it can spiral into anxiety that is disproportionate and debilitating. PPA is common, rarely discussed, and very treatable.</p>
- {["Constant worry that something bad will happen to your baby","Racing thoughts — especially at night","Physical symptoms: racing heart, shallow breathing","Difficulty sleeping even when baby sleeps","Feeling on edge, irritable, or unable to relax","Intrusive thoughts that pop in unwanted*"].map((s,i)=>(
- <div key={i} style={{ fontSize:12, color:"#1a1a1a", padding:"6px 10px", background:"rgba(143,138,160,0.08)", borderRadius:6, marginBottom:4 }}>• {s}</div>
+ {["Constant worry that something bad will happen to your baby","Racing thoughts -- especially at night","Physical symptoms: racing heart, shallow breathing","Difficulty sleeping even when baby sleeps","Feeling on edge, irritable, or unable to relax","Intrusive thoughts that pop in unwanted*"].map((s,i)=>(
+ <div key={i} style={{ fontSize:12, color:"#1a1a1a", padding:"6px 10px", background:"rgba(143,138,160,0.08)", borderRadius:6, marginBottom:4 }}>â€¢ {s}</div>
  ))}
  <div style={{ fontSize:11, color:"#8a8480", fontStyle:"italic", margin:"8px 0 12px", fontFamily:"'Cormorant Garamond',serif" }}>* Intrusive thoughts are involuntary and extremely common in new moms. They do not mean you are dangerous. Tell your provider.</div>
  {[{t:"Therapy (CBT)",d:"Gold standard for anxiety. Helps rewire thought patterns driving the spiral."},{t:"Mindfulness and breathwork",d:"Even 5 minutes of slow breathing lowers cortisol measurably."},{t:"Medication",d:"SSRIs and buspirone are safe for breastfeeding. Your OB can prescribe."},{t:"Sleep prioritization",d:"Sleep deprivation directly amplifies anxiety. Even short windows help."}].map((item,i)=>(
@@ -3396,32 +3288,30 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  )}
  </div>
 
-{/* Note From Your Nurse */}
-
+ {/* Note From Your Nurse */}
  <div style={{ background:"#ffffff", border:"1px solid #e8e2db", borderLeft:"3px solid #6a9e96", borderRadius:6, padding:20, marginBottom:12, cursor:"pointer" }} onClick={()=>setPpSection(ppSection==="note"?null:"note")}>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
  <div>
  <div style={{ fontSize:13, fontWeight:500, color:"#6a9e96", fontFamily:"'Inter',sans-serif", marginBottom:2 }}>A Note From Your Nurse</div>
  <div style={{ fontSize:11, color:"#8a8480", fontFamily:"'Inter',sans-serif" }}>What the fourth trimester really looks like.</div>
  </div>
- <div style={{ fontSize:12, color:"#8a8480" }}>{ppSection==="note"?"▲":"▼"}</div>
+ <div style={{ fontSize:12, color:"#8a8480" }}>{ppSection==="note"?"â–²":"â–¼"}</div>
  </div>
  {ppSection==="note" && (
  <div style={{ marginTop:14, borderTop:"1px solid #e8e2db", paddingTop:14 }}>
- <p style={{ margin:0, fontSize:15, lineHeight:1.9, color:"#1a1a1a", fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic" }}>As a nurse and a mom, I want you to know: reaching out for help is the bravest thing you can do for your baby. You cannot pour from an empty cup. PPD and PPA are not character flaws — they are medical conditions that respond beautifully to treatment. The moms who ask for help are the strongest moms in the room. If something feels off, trust your gut and call your provider today.</p>
+ <p style={{ margin:0, fontSize:15, lineHeight:1.9, color:"#1a1a1a", fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic" }}>As a nurse and a mom, I want you to know: reaching out for help is the bravest thing you can do for your baby. You cannot pour from an empty cup. PPD and PPA are not character flaws -- they are medical conditions that respond beautifully to treatment. The moms who ask for help are the strongest moms in the room. If something feels off, trust your gut and call your provider today.</p>
  </div>
  )}
  </div>
 
-{/* Fourth Trimester Checklist */}
-
+ {/* Fourth Trimester Checklist */}
  <div style={{ background:"#ffffff", border:"1px solid #e8e2db", borderLeft:"3px solid #7a9e87", borderRadius:6, padding:20, marginBottom:12, cursor:"pointer" }} onClick={()=>setPpSection(ppSection==="checklist"?null:"checklist")}>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
  <div>
  <div style={{ fontSize:13, fontWeight:500, color:"#7a9e87", fontFamily:"'Inter',sans-serif", marginBottom:2 }}>Fourth Trimester Checklist</div>
  <div style={{ fontSize:11, color:"#8a8480", fontFamily:"'Inter',sans-serif" }}>Week by week recovery guide.</div>
  </div>
- <div style={{ fontSize:12, color:"#8a8480" }}>{ppSection==="checklist"?"▲":"▼"}</div>
+ <div style={{ fontSize:12, color:"#8a8480" }}>{ppSection==="checklist"?"â–²":"â–¼"}</div>
  </div>
  {ppSection==="checklist" && (
  <div style={{ marginTop:14, borderTop:"1px solid #e8e2db", paddingTop:14 }}>
@@ -3441,7 +3331,7 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  return (
  <div key={item} style={{ display:"flex", gap:10, alignItems:"flex-start", padding:"8px 0", borderBottom:"1px solid #e8e2db", cursor:"pointer" }} onClick={e=>{e.stopPropagation();toggleChecklist(sec.category,item);}}>
  <div style={{ width:18, height:18, borderRadius:3, border:"1px solid "+(done?"#7a9e87":"#e8e2db"), background:done?"#7a9e87":"transparent", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
- {done && <span style={{ fontSize:10, color:"#fff" }}>✓</span>}
+ {done && <span style={{ fontSize:10, color:"#fff" }}>âœ“</span>}
  </div>
  <div style={{ fontSize:13, color:done?"#8a8480":"#1a1a1a", textDecoration:done?"line-through":"none", lineHeight:1.5, fontFamily:"'Inter',sans-serif" }}>{item}</div>
  </div>
@@ -3455,24 +3345,23 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  </div>
  </>}
 
-{momView===“momAllergies” && <>
-<PageHeader title=“My Allergies” btnLabel=“Add Allergy” btnColor={theme.coral} onAdd={()=>openAdd(“momAllergies”,F.momAllergy,“momAllergies”)} />
+ {momView==="momAllergies" && <>
+ <PageHeader title="My Allergies" btnLabel="Add Allergy" btnColor={theme.coral} onAdd={()=>openAdd("momAllergies",F.momAllergy,"momAllergies")} />
 
  <div style={{ ...c.card, background:"linear-gradient(135deg,#fdf6f4,#faf8f5)", borderLeft:`4px solid ${theme.coral}`, marginBottom:16 }}>
  <div style={{ fontWeight:500, fontSize:14, color:theme.coral, marginBottom:6 }}>Important</div>
  <p style={{ margin:0, fontSize:13, lineHeight:1.7, color:theme.text }}>
- Share this list with every healthcare provider at every visit — including dentists, urgent care, and the ER. Wear a medical alert bracelet if you have a severe allergy. In an emergency, call <span style={{fontWeight:500}}>911</span>.
+ Share this list with every healthcare provider at every visit -- including dentists, urgent care, and the ER. Wear a medical alert bracelet if you have a severe allergy. In an emergency, call <span style={{fontWeight:500}}>911</span>.
  </p>
  </div>
 
  <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:16 }}>
- {[{ label:"Mild — Local reaction", color:theme.green },{ label:"Moderate — Widespread reaction", color:theme.yellow },{ label:"Severe — Anaphylaxis Risk", color:theme.coral }].map((s,i)=>(
+ {[{ label:"Mild -- Local reaction", color:theme.green },{ label:"Moderate -- Widespread reaction", color:theme.yellow },{ label:"Severe -- Anaphylaxis Risk", color:theme.coral }].map((s,i)=>(
  <span key={i} style={{ ...c.badge(s.color), fontSize:11 }}>{s.label}</span>
  ))}
  </div>
 
-{momAllergies.length===0 && (
-
+ {momAllergies.length===0 && (
  <div style={{ ...c.card, textAlign:"center", color:theme.muted, padding:32 }}>
  <div style={{ fontSize:36, marginBottom:8 }}></div>
  <div style={{ fontWeight:500 }}>No allergies recorded</div>
@@ -3480,11 +3369,10 @@ Every feeding journey is valid — breastfeeding, pumping, formula, or a combina
  </div>
  )}
 
-{momAllergies.map(a => {
-const sevColor = a.severity?.includes(“Severe”) ? theme.coral : a.severity===“Moderate” ? theme.yellow : theme.green;
-return (
-<EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={a.id} item={a} dataKey="momAllergies" label={a.allergen} fields={F.momAllergy}>
-
+ {momAllergies.map(a => {
+ const sevColor = a.severity?.includes("Severe") ? theme.coral : a.severity==="Moderate" ? theme.yellow : theme.green;
+ return (
+ <EntryCard openEdit={openEdit} setConfirmDelete={setConfirmDelete} c={c} key={a.id} item={a} dataKey="momAllergies" label={a.allergen} fields={F.momAllergy}>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:8, flexWrap:"wrap", gap:6 }}>
  <div style={{ fontWeight:500, fontSize:17 }}> {a.allergen}</div>
  <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
@@ -3510,7 +3398,7 @@ return (
  <div style={{ fontSize:13, color:theme.text, lineHeight:1.6 }}>{a.actionPlan}</div>
  </div>
  )}
- <div style={{ fontSize:11, color:theme.muted, marginTop:4 }}>Diagnosed: {a.diagnosed}{a.notes ? ` · ${a.notes}` : ""}</div>
+ <div style={{ fontSize:11, color:theme.muted, marginTop:4 }}>Diagnosed: {a.diagnosed}{a.notes ? ` . ${a.notes}` : ""}</div>
  </EntryCard>
  );
  })}
@@ -3518,78 +3406,76 @@ return (
  <div style={{ ...c.card, background:"linear-gradient(135deg,#faf8f5,#f5f0ea)", marginTop:8 }}>
  <div style={{ fontWeight:500, fontSize:13, marginBottom:8 }}> Nurse Tip</div>
  <p style={{ margin:0, fontSize:13, lineHeight:1.8, color:theme.muted }}>
- Always carry two EpiPens if prescribed — reactions can be biphasic, meaning a second wave can occur 1–8 hours later. Never rely on antihistamines alone for a severe reaction. After using an EpiPen, go to the ER immediately even if symptoms improve.
+ Always carry two EpiPens if prescribed -- reactions can be biphasic, meaning a second wave can occur 1-8 hours later. Never rely on antihistamines alone for a severe reaction. After using an EpiPen, go to the ER immediately even if symptoms improve.
  </p>
  </div>
  </>}
 
-{momView===“momTips” && <>
-{/* Mom Community Section */}
-
+ {momView==="momTips" && <>
+ {/* Mom Community Section */}
  <div style={{ marginBottom:16, textAlign:"center" }}>
  <div style={{ fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", fontSize:32, marginBottom:8 }}>Find Your Village</div>
- <div style={{ fontSize:12, color:theme.muted, fontFamily:"'Inter',sans-serif", lineHeight:1.7, maxWidth:480, margin:"0 auto" }}>Some of the best friendships are made when you are both covered in spit-up and running on no sleep. These are great ways to find mom friends with kids the same age — online and in your neighborhood.</div>
+ <div style={{ fontSize:12, color:theme.muted, fontFamily:"'Inter',sans-serif", lineHeight:1.7, maxWidth:480, margin:"0 auto" }}>Some of the best friendships are made when you are both covered in spit-up and running on no sleep. These are great ways to find mom friends with kids the same age -- online and in your neighborhood.</div>
  </div>
 
-{[
-{
-name:“Meetup — Mom Groups”,
-desc:“Search for local mom groups, playdate meetups, and new parent groups in your city. Free to join and easy to find groups organized by your child’s age.”,
-url:“https://www.meetup.com/topics/moms”,
-color:theme.accent,
-tag:“Local Meetups”,
-},
-{
-name:“Peanut App”,
-desc:“Think of it as a friend-finding app designed specifically for moms. Match with moms nearby who have kids the same age, share your interests, and meet for coffee.”,
-url:“https://www.peanut-app.io”,
-color:theme.purple,
-tag:“Mom Friend Finder”,
-},
-{
-name:“MOPS International”,
-desc:“Mothers of Preschoolers — local groups for moms of babies through kindergarteners. Real meetups, food, friendship, and no judgment. Groups in thousands of cities.”,
-url:“https://www.mops.org”,
-color:theme.green,
-tag:“In-Person Groups”,
-},
-{
-name:“Mommy & Me Classes”,
-desc:“Search your local YMCA, community center, library, or recreation center for Mommy and Me classes — yoga, music, art, swim. Great way to meet moms with same-age babies.”,
-url:“https://www.ymca.net”,
-color:theme.teal,
-tag:“Classes Near You”,
-},
-{
-name:“Facebook Mom Groups”,
-desc:“Search Facebook for mom groups in your city or neighborhood — most areas have very active local groups for buy/sell/trade, playdates, restaurant recs, and real talk.”,
-url:“https://www.facebook.com/groups”,
-color:theme.blue,
-tag:“Online & Local”,
-},
-{
-name:“Nextdoor”,
-desc:“Your actual neighborhood app. Post in your local feed looking for park meetups, stroller walks, or families with kids the same age. Most neighborhoods have very active parent communities.”,
-url:“https://www.nextdoor.com”,
-color:theme.yellow,
-tag:“Your Neighborhood”,
-},
-{
-name:“Library Story Times”,
-desc:“Almost every public library in the US offers free weekly story times for babies, toddlers, and preschoolers. One of the easiest ways to meet local moms consistently.”,
-url:“https://www.loc.gov/families”,
-color:theme.orange,
-tag:“Free & Weekly”,
-},
-{
-name:“Bumble BFF”,
-desc:“Yes, the dating app has a friend-finding mode. A lot of moms use it specifically to find other mom friends. Same concept — swipe, match, grab coffee.”,
-url:“https://bumble.com/en/bff”,
-color:theme.coral,
-tag:“Friend Finder App”,
-},
-].map((group,i)=>(
-
+ {[
+ {
+ name:"Meetup -- Mom Groups",
+ desc:"Search for local mom groups, playdate meetups, and new parent groups in your city. Free to join and easy to find groups organized by your child's age.",
+ url:"https://www.meetup.com/topics/moms",
+ color:theme.accent,
+ tag:"Local Meetups",
+ },
+ {
+ name:"Peanut App",
+ desc:"Think of it as a friend-finding app designed specifically for moms. Match with moms nearby who have kids the same age, share your interests, and meet for coffee.",
+ url:"https://www.peanut-app.io",
+ color:theme.purple,
+ tag:"Mom Friend Finder",
+ },
+ {
+ name:"MOPS International",
+ desc:"Mothers of Preschoolers -- local groups for moms of babies through kindergarteners. Real meetups, food, friendship, and no judgment. Groups in thousands of cities.",
+ url:"https://www.mops.org",
+ color:theme.green,
+ tag:"In-Person Groups",
+ },
+ {
+ name:"Mommy & Me Classes",
+ desc:"Search your local YMCA, community center, library, or recreation center for Mommy and Me classes -- yoga, music, art, swim. Great way to meet moms with same-age babies.",
+ url:"https://www.ymca.net",
+ color:theme.teal,
+ tag:"Classes Near You",
+ },
+ {
+ name:"Facebook Mom Groups",
+ desc:"Search Facebook for mom groups in your city or neighborhood -- most areas have very active local groups for buy/sell/trade, playdates, restaurant recs, and real talk.",
+ url:"https://www.facebook.com/groups",
+ color:theme.blue,
+ tag:"Online & Local",
+ },
+ {
+ name:"Nextdoor",
+ desc:"Your actual neighborhood app. Post in your local feed looking for park meetups, stroller walks, or families with kids the same age. Most neighborhoods have very active parent communities.",
+ url:"https://www.nextdoor.com",
+ color:theme.yellow,
+ tag:"Your Neighborhood",
+ },
+ {
+ name:"Library Story Times",
+ desc:"Almost every public library in the US offers free weekly story times for babies, toddlers, and preschoolers. One of the easiest ways to meet local moms consistently.",
+ url:"https://www.loc.gov/families",
+ color:theme.orange,
+ tag:"Free & Weekly",
+ },
+ {
+ name:"Bumble BFF",
+ desc:"Yes, the dating app has a friend-finding mode. A lot of moms use it specifically to find other mom friends. Same concept -- swipe, match, grab coffee.",
+ url:"https://bumble.com/en/bff",
+ color:theme.coral,
+ tag:"Friend Finder App",
+ },
+ ].map((group,i)=>(
  <div key={i} style={{ ...c.card, borderLeft:`3px solid ${group.color}` }}>
  <div style={{ marginBottom:8 }}>
  <div style={{ fontSize:13, fontWeight:500, color:group.color, fontFamily:"'Inter',sans-serif", marginBottom:3 }}>{group.name}</div>
@@ -3598,7 +3484,7 @@ tag:“Friend Finder App”,
  <p style={{ margin:"0 0 10px", fontSize:12, lineHeight:1.8, color:theme.muted, fontFamily:"'Inter',sans-serif" }}>{group.desc}</p>
  <a href={group.url} target="_blank" rel="noopener noreferrer"
  style={{ fontSize:10, color:group.color, letterSpacing:"0.06em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif", textDecoration:"none", borderBottom:`1px solid ${group.color}44`, paddingBottom:1 }}>
- Visit Website →
+ Visit Website â†’
  </a>
  </div>
  ))}
@@ -3606,12 +3492,11 @@ tag:“Friend Finder App”,
  <div style={{ ...c.card, background:"#faf8f5", textAlign:"center" }}>
  <div style={{ fontSize:22, fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", marginBottom:8 }}>Motherhood is better together</div>
  <p style={{ margin:0, fontSize:13, color:theme.muted, lineHeight:1.9, fontFamily:"'Inter',sans-serif" }}>
- It might take a few tries to find your people — and that is completely normal. Show up, be yourself, and give it time. Your village is out there.
+ It might take a few tries to find your people -- and that is completely normal. Show up, be yourself, and give it time. Your village is out there.
  </p>
  </div>
 
-{/* Tips — below the links */}
-
+ {/* Tips -- below the links */}
  <div style={{ marginTop:32, marginBottom:16, textAlign:"center" }}>
  <div style={{ fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic", fontSize:32 }}>A Little Something for You</div>
  </div>
@@ -3625,20 +3510,17 @@ tag:“Friend Finder App”,
  </div>
  </>)}
 
-{/* FAMILY ACCESS */}
-{mainTab===“family” && (
-
+ {/* FAMILY ACCESS */}
+ {mainTab==="family" && (
  <div style={c.main}>
 
-{/* Header */}
-
+ {/* Header */}
  <div style={{ marginBottom:24 }}>
  <div style={{ fontSize:26, fontWeight:500 }}>Family Access</div>
- <div style={{ color:theme.muted, fontSize:14 }}>Share MamaOnTrack with your village — caregivers, co-parents, grandparents, and more.</div>
+ <div style={{ color:theme.muted, fontSize:14 }}>Share MamaOnTrack with your village -- caregivers, co-parents, grandparents, and more.</div>
  </div>
 
-{/* Coming Soon Banner */}
-
+ {/* Coming Soon Banner */}
  <div style={{ ...c.card, background:"linear-gradient(135deg,#ffe0ec,#f5eeff)", border:"none", marginBottom:20 }}>
  <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}>
  <span style={{ fontSize:32 }}></span>
@@ -3649,14 +3531,13 @@ tag:“Friend Finder App”,
  </div>
  </div>
 
-{/* How it works */}
-
+ {/* How it works */}
  <div style={c.card}>
  <div style={c.sTitle}>How Family Access Works</div>
  {[
               { step:"1", icon:"", title:"You create your family group", desc:"As the account owner, you set up your MamaOnTrack family. All your children and data are already there." },
               { step:"2", icon:"", title:"Invite caregivers by email or link", desc:"Send a secure invite link to your partner, nanny, grandparent, or co-parent. They create their own login." },
-              { step:"3", icon:"", title:"You choose their access level", desc:"Assign each caregiver a role — Admin, Co-Parent, Caregiver, or View Only. You stay in control." },
+              { step:"3", icon:"", title:"You choose their access level", desc:"Assign each caregiver a role -- Admin, Co-Parent, Caregiver, or View Only. You stay in control." },
               { step:"4", icon:"", title:"Everything syncs in real time", desc:"When dad logs a bottle at 3am, your app updates instantly. No more guessing if baby was fed." },
  ].map((item,i)=>(
  <div key={i} style={{ display:"flex", gap:14, padding:"14px 0", borderBottom: i<3 ? `1px solid ${theme.border}` : "none" }}>
@@ -3669,8 +3550,7 @@ tag:“Friend Finder App”,
  ))}
  </div>
 
-{/* Access levels */}
-
+ {/* Access levels */}
  <div style={c.card}>
  <div style={c.sTitle}>Caregiver Access Levels</div>
  {[
@@ -3695,10 +3575,9 @@ tag:“Friend Finder App”,
  ))}
  </div>
 
-{/* Mock invite UI */}
-
+ {/* Mock invite UI */}
  <div style={c.card}>
- <div style={c.sTitle}>Current Family Members — Preview</div>
+ <div style={c.sTitle}>Current Family Members -- Preview</div>
  {[
  { name:"You (Admin)", email:"mama@email.com", role:" Admin", color:theme.accent, status:"Active", avatar:"" },
  { name:"Alex (Partner)", email:"alex@email.com", role:" Co-Parent", color:theme.purple, status:"Active", avatar:"" },
@@ -3723,8 +3602,7 @@ tag:“Friend Finder App”,
  </button>
  </div>
 
-{/* What syncs */}
-
+ {/* What syncs */}
  <div style={c.card}>
  <div style={c.sTitle}>What Syncs Across All Caregivers</div>
  <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
@@ -3734,17 +3612,16 @@ tag:“Friend Finder App”,
  </div>
  </div>
 
-{/* Tech note for developers */}
-
+ {/* Tech note for developers */}
  <div style={{ ...c.card, background:"linear-gradient(135deg,#e8f4ff,#f0e8ff)", border:"none" }}>
- <div style={{ fontWeight:500, fontSize:14, marginBottom:8, color:theme.blue }}>For Developers — Technical Requirements</div>
+ <div style={{ fontWeight:500, fontSize:14, marginBottom:8, color:theme.blue }}>For Developers -- Technical Requirements</div>
  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
  {[
- { icon:"", t:"Cloud database", d:"Firebase Firestore or Supabase — real-time listeners for instant sync across devices" },
- { icon:"", t:"Authentication", d:"Firebase Auth or Supabase Auth — email/password + Google/Apple Sign-In" },
- { icon:"", t:"Family data model", d:"Family group ID scopes all data — each user belongs to one or more families" },
+ { icon:"", t:"Cloud database", d:"Firebase Firestore or Supabase -- real-time listeners for instant sync across devices" },
+ { icon:"", t:"Authentication", d:"Firebase Auth or Supabase Auth -- email/password + Google/Apple Sign-In" },
+ { icon:"", t:"Family data model", d:"Family group ID scopes all data -- each user belongs to one or more families" },
  { icon:"", t:"Real-time sync", d:"Firestore onSnapshot listeners push updates to all active sessions instantly" },
- { icon:"", t:"Invite system", d:"Email invites with secure tokenized links — invitee creates account and joins family" },
+ { icon:"", t:"Invite system", d:"Email invites with secure tokenized links -- invitee creates account and joins family" },
  { icon:"", t:"Role-based access", d:"Firestore security rules enforce read/write permissions per role at the database level" },
  ].map((item,i)=>(
  <div key={i} style={{ display:"flex", gap:10, padding:"8px 0", borderBottom: i<5?`1px solid ${theme.border}`:"none" }}>
@@ -3755,18 +3632,17 @@ tag:“Friend Finder App”,
  </div>
  </div>
 
-{/* Ad-Free Promise */}
-
+ {/* Ad-Free Promise */}
  <div style={{ ...c.card, background:"linear-gradient(135deg,#f3f7f5,#f0f5f7)", border:`1px solid ${theme.green}44`, marginBottom:16 }}>
  <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:10 }}>
  <span style={{ fontSize:32 }}></span>
  <div>
  <div style={{ fontWeight:500, fontSize:16, color:theme.green }}>Always Ad-Free. No Exceptions.</div>
- <div style={{ fontSize:12, color:theme.muted, marginTop:2 }}>MamaOnTrack will never show advertisements — on any plan, at any price.</div>
+ <div style={{ fontSize:12, color:theme.muted, marginTop:2 }}>MamaOnTrack will never show advertisements -- on any plan, at any price.</div>
  </div>
  </div>
  <p style={{ margin:"0 0 12px", fontSize:13, lineHeight:1.8, color:theme.text }}>
- You are paying for a health tool to care for your family — not to be marketed to. Your data will never be sold, shared with advertisers, or used for ad targeting. Ever.
+ You are paying for a health tool to care for your family -- not to be marketed to. Your data will never be sold, shared with advertisers, or used for ad targeting. Ever.
  </p>
  <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
  {[
@@ -3779,20 +3655,17 @@ tag:“Friend Finder App”,
  </div>
  </div>
 
-{/* Freemium Model */}
-
+ {/* Freemium Model */}
  <div style={{ ...c.card, background:"linear-gradient(135deg,#faf8f5,#f5f0ea)", border:"none" }}>
- <div style={{ fontWeight:500, fontSize:16, marginBottom:4 }}>Pricing Model — Free to Download</div>
+ <div style={{ fontWeight:500, fontSize:16, marginBottom:4 }}>Pricing Model -- Free to Download</div>
  <div style={{ fontSize:13, color:theme.muted, marginBottom:20, lineHeight:1.7 }}>
- MamaOnTrack is free to download with core features available to everyone. Unlock the full experience with a one-time purchase or choose a monthly plan — whichever works best for your family.
+ MamaOnTrack is free to download with core features available to everyone. Unlock the full experience with a one-time purchase or choose a monthly plan -- whichever works best for your family.
  </div>
 
-{/* Plan cards */}
-
+ {/* Plan cards */}
  <div style={{ display:"flex", flexDirection:"column", gap:12, marginBottom:20 }}>
 
-{/* Free */}
-
+ {/* Free */}
  <div style={{ padding:16, background:"#fff", border:`1px solid ${theme.border}`, borderRadius:6 }}>
  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
  <div style={{ fontWeight:500, fontSize:16 }}> Free</div>
@@ -3822,8 +3695,7 @@ tag:“Friend Finder App”,
  </div>
  </div>
 
-{/* Premium — Monthly */}
-
+ {/* Premium -- Monthly */}
  <div style={{ padding:16, background:"linear-gradient(135deg,#faf8f5,#f5f0ea)", border:`2px solid ${theme.accent}`, borderRadius:6, position:"relative" }}>
  <div style={{ position:"absolute", top:-12, left:"50%", transform:"translateX(-50%)", background:`linear-gradient(135deg,${theme.accent},${theme.purple})`, color:"#fff", fontSize:11, fontWeight:500, padding:"4px 16px", borderRadius:999, whiteSpace:"nowrap" }}>
  MOST POPULAR
@@ -3856,8 +3728,7 @@ tag:“Friend Finder App”,
  </div>
  </div>
 
-{/* Lifetime */}
-
+ {/* Lifetime */}
  <div style={{ padding:16, background:"linear-gradient(135deg,#faf8f5,#f5f0ea)", border:`2px solid ${theme.yellow}`, borderRadius:6, position:"relative" }}>
  <div style={{ position:"absolute", top:-12, left:"50%", transform:"translateX(-50%)", background:`linear-gradient(135deg,${theme.yellow},${theme.orange})`, color:"#fff", fontSize:11, fontWeight:500, padding:"4px 16px", borderRadius:999, whiteSpace:"nowrap" }}>
  BEST VALUE
@@ -3866,11 +3737,11 @@ tag:“Friend Finder App”,
  <div style={{ fontWeight:500, fontSize:16, color:theme.yellow }}> Lifetime Access</div>
  <div style={{ textAlign:"right" }}>
  <div style={{ fontSize:22, fontWeight:500, color:theme.yellow }}>$49.99</div>
- <div style={{ fontSize:11, color:theme.muted }}>one-time · pay once, own forever</div>
+ <div style={{ fontSize:11, color:theme.muted }}>one-time . pay once, own forever</div>
  </div>
  </div>
  <div style={{ fontSize:12, color:theme.muted, marginBottom:10 }}>
- No recurring fees. No renewals. Yours forever — including all future updates.
+ No recurring fees. No renewals. Yours forever -- including all future updates.
  </div>
  <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
  {[
@@ -3893,8 +3764,7 @@ tag:“Friend Finder App”,
 
  </div>
 
-{/* Feature comparison table */}
-
+ {/* Feature comparison table */}
  <div style={{ fontWeight:500, fontSize:14, marginBottom:12 }}> Full Feature Comparison</div>
  <div style={{ border:`1px solid ${theme.border}`, borderRadius:6, overflow:"hidden" }}>
  {/* Header */}
@@ -3953,8 +3823,7 @@ tag:“Friend Finder App”,
  <DeleteModal confirmDelete={confirmDelete} setConfirmDelete={setConfirmDelete} deleteEntry={deleteEntry} />
  <EventDetailPanel />
 
-{showAddKid && (
-
+ {showAddKid && (
  <div style={c.overlay} onClick={()=>setShowAddKid(false)}>
  <div style={c.modalBox} onClick={e=>e.stopPropagation()}>
  <h3 style={{ margin:"0 0 20px", fontWeight:500 }}>Add a Child</h3>
@@ -3978,24 +3847,22 @@ tag:“Friend Finder App”,
  </div>
  )}
 
-{/* ══════ PRIVACY ══════ */}
-{mainTab===“privacy” && (
-
+ {/* â•â•â•â•â•â• PRIVACY â•â•â•â•â•â• */}
+ {mainTab==="privacy" && (
  <div style={c.main}>
  <div style={{ marginBottom:24 }}>
  <div style={{ fontSize:44, fontWeight:400, fontFamily:"'Cormorant Garamond',serif", fontStyle:"italic" }}>Privacy & Security</div>
  <div style={{ fontSize:12, color:theme.muted, marginTop:4, fontFamily:"'Inter',sans-serif" }}>Your family's health data is yours. Always.</div>
  </div>
 
-{/* Core promise */}
-
+ {/* Core promise */}
  <div style={{ ...c.card, borderLeft:`3px solid ${theme.accent}`, background:"#faf8f5" }}>
  <div style={c.sTitle}>Our Privacy Promise</div>
  <p style={{ margin:0, fontSize:13, lineHeight:1.9, color:theme.text, fontFamily:"'Inter',sans-serif" }}>
- MamaOnTrack was built by a nurse and a mother. We understand that the information you store here — your child's health history, your postpartum journey, your family's medical records — is among the most personal data that exists. We treat it that way.
+ MamaOnTrack was built by a nurse and a mother. We understand that the information you store here -- your child's health history, your postpartum journey, your family's medical records -- is among the most personal data that exists. We treat it that way.
  </p>
  <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginTop:16 }}>
- {["Your data is never sold","No advertising — ever","No third-party trackers","Encrypted in transit and at rest","You own your data","Delete your account anytime"].map((item,i)=>(
+ {["Your data is never sold","No advertising -- ever","No third-party trackers","Encrypted in transit and at rest","You own your data","Delete your account anytime"].map((item,i)=>(
  <div key={i} style={{ display:"flex", alignItems:"center", gap:8, padding:"6px 14px", borderRadius:3, background:`${theme.green}10`, border:`1px solid ${theme.green}28` }}>
  <div style={{ width:6, height:6, borderRadius:"50%", background:theme.green, flexShrink:0 }} />
  <span style={{ fontSize:11, color:theme.green, fontFamily:"'Inter',sans-serif", letterSpacing:"0.03em" }}>{item}</span>
@@ -4004,15 +3871,14 @@ tag:“Friend Finder App”,
  </div>
  </div>
 
-{/* What we collect */}
-
+ {/* What we collect */}
  <div style={c.card}>
  <div style={c.sTitle}>What Data We Collect</div>
  {[
  { title:"Health records you enter", desc:"Symptoms, medications, vaccines, growth data, vitals, and all other entries you log. This data is stored securely and is only accessible by you and caregivers you explicitly invite." },
- { title:"Account information", desc:"Your name, email address, and password (stored as an encrypted hash — we never see your password). Used only for authentication." },
- { title:"Children’s information", desc:"Names, dates of birth, and health data for each child you add. Scoped to your family account only." },
- { title:"Usage data", desc:"Anonymous, aggregated data about how features are used — never tied to your identity. Used only to improve the app." },
+ { title:"Account information", desc:"Your name, email address, and password (stored as an encrypted hash -- we never see your password). Used only for authentication." },
+ { title:"Children's information", desc:"Names, dates of birth, and health data for each child you add. Scoped to your family account only." },
+ { title:"Usage data", desc:"Anonymous, aggregated data about how features are used -- never tied to your identity. Used only to improve the app." },
  ].map((item,i)=>(
  <div key={i} style={{ padding:"12px 0", borderBottom:i<3?`1px solid ${theme.border}`:"none" }}>
  <div style={{ fontWeight:500, fontSize:12, letterSpacing:"0.03em", fontFamily:"'Inter',sans-serif", marginBottom:4 }}>{item.title}</div>
@@ -4021,12 +3887,11 @@ tag:“Friend Finder App”,
  ))}
  </div>
 
-{/* What we never do */}
-
+ {/* What we never do */}
  <div style={c.card}>
  <div style={c.sTitle}>What We Will Never Do</div>
  {[
- { title:"Sell your data", desc:"Your health data, your children’s records, and your personal information will never be sold to any third party — not advertisers, not data brokers, not anyone." },
+ { title:"Sell your data", desc:"Your health data, your children's records, and your personal information will never be sold to any third party -- not advertisers, not data brokers, not anyone." },
  { title:"Show you advertisements", desc:"MamaOnTrack is 100% ad-free on every plan. We do not use ad networks, ad SDKs, or behavioral targeting of any kind." },
  { title:"Share with insurers or employers", desc:"Your health information is never shared with insurance companies, employers, or government entities without your explicit written consent or a legal requirement." },
  { title:"Use your data to train AI models", desc:"Your personal entries and health records are never used to train artificial intelligence models." },
@@ -4034,7 +3899,7 @@ tag:“Friend Finder App”,
  ].map((item,i)=>(
  <div key={i} style={{ display:"flex", gap:12, padding:"12px 0", borderBottom:i<4?`1px solid ${theme.border}`:"none" }}>
  <div style={{ width:20, height:20, borderRadius:3, background:`${theme.coral}12`, border:`1px solid ${theme.coral}33`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
- <span style={{ fontSize:10, color:theme.coral, fontWeight:500 }}>✕</span>
+ <span style={{ fontSize:10, color:theme.coral, fontWeight:500 }}>âœ•</span>
  </div>
  <div>
  <div style={{ fontWeight:500, fontSize:12, fontFamily:"'Inter',sans-serif", marginBottom:4 }}>{item.title}</div>
@@ -4044,12 +3909,11 @@ tag:“Friend Finder App”,
  ))}
  </div>
 
-{/* How we protect */}
-
+ {/* How we protect */}
  <div style={c.card}>
  <div style={c.sTitle}>How We Protect Your Data</div>
  {[
- { title:"Encryption in transit", desc:"All data sent between your device and our servers is encrypted using TLS — the same technology used by banks." },
+ { title:"Encryption in transit", desc:"All data sent between your device and our servers is encrypted using TLS -- the same technology used by banks." },
  { title:"Encryption at rest", desc:"All data stored in our database is encrypted at rest. Even in the unlikely event of a breach, your data remains protected." },
  { title:"Secure authentication", desc:"Passwords are never stored in plain text. We use industry-standard hashing. You can also sign in with Apple or Google for additional security." },
  { title:"Role-based access", desc:"Family access permissions are enforced at the database level. A Caregiver cannot access data outside their assigned role even if they try to bypass the app." },
@@ -4057,7 +3921,7 @@ tag:“Friend Finder App”,
  ].map((item,i)=>(
  <div key={i} style={{ display:"flex", gap:12, padding:"12px 0", borderBottom:i<4?`1px solid ${theme.border}`:"none" }}>
  <div style={{ width:20, height:20, borderRadius:3, background:`${theme.green}12`, border:`1px solid ${theme.green}33`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1 }}>
- <span style={{ fontSize:10, color:theme.green, fontWeight:500 }}>✓</span>
+ <span style={{ fontSize:10, color:theme.green, fontWeight:500 }}>âœ“</span>
  </div>
  <div>
  <div style={{ fontWeight:500, fontSize:12, fontFamily:"'Inter',sans-serif", marginBottom:4 }}>{item.title}</div>
@@ -4067,15 +3931,14 @@ tag:“Friend Finder App”,
  ))}
  </div>
 
-{/* Your rights */}
-
+ {/* Your rights */}
  <div style={c.card}>
  <div style={c.sTitle}>Your Rights</div>
  {[
  { title:"Access your data", desc:"You can export a full copy of all your health records at any time from within the app (Premium) or by contacting us." },
  { title:"Delete your account", desc:"You can permanently delete your account and all associated data at any time. Deletion is immediate and irreversible." },
  { title:"Correct your information", desc:"You can edit or delete any entry in the app at any time." },
- { title:"Withdraw consent", desc:"You can revoke any caregiver’s access at any time from the Family Access tab." },
+ { title:"Withdraw consent", desc:"You can revoke any caregiver's access at any time from the Family Access tab." },
  { title:"Contact us", desc:"For any privacy questions or concerns, contact us at privacy@mamaontrack.com. We respond within 48 hours." },
  ].map((item,i)=>(
  <div key={i} style={{ padding:"12px 0", borderBottom:i<4?`1px solid ${theme.border}`:"none" }}>
@@ -4085,8 +3948,7 @@ tag:“Friend Finder App”,
  ))}
  </div>
 
-{/* AI note */}
-
+ {/* AI note */}
  <div style={{ ...c.card, background:"#faf8f5", borderLeft:`3px solid ${theme.purple}` }}>
  <div style={c.sTitle}>A Note About AI Features</div>
  <p style={{ margin:0, fontSize:13, lineHeight:1.9, color:theme.text, fontFamily:"'Inter',sans-serif" }}>
@@ -4094,8 +3956,7 @@ tag:“Friend Finder App”,
  </p>
  </div>
 
-{/* Legal links */}
-
+ {/* Legal links */}
  <div style={{ ...c.card, textAlign:"center" }}>
  <div style={{ fontSize:12, color:theme.muted, lineHeight:1.9, fontFamily:"'Inter',sans-serif", marginBottom:12 }}>Privacy Policy and Terms of Service will be linked here at launch</div>
  <div style={{ display:"flex", justifyContent:"center", gap:24, flexWrap:"wrap" }}>
@@ -4108,8 +3969,7 @@ tag:“Friend Finder App”,
  </div>
  )}
 
-{/* Disclosure Footer */}
-
+ {/* Disclosure Footer */}
  <div style={{ borderTop:"1px solid #e8e2db", padding:"24px 24px 32px", background:"#faf8f5", marginTop:8 }}>
  <p style={{ margin:"0 0 10px", fontSize:10, color:"#8a8480", lineHeight:1.9, textAlign:"center", letterSpacing:"0.02em", fontFamily:"'Inter',sans-serif", maxWidth:600, marginLeft:"auto", marginRight:"auto" }}>
  The information provided in MamaOnTrack is for general tracking and educational purposes only. Content is informed by pediatric and medical professionals and current evidence-based guidelines, including the American Academy of Pediatrics (AAP) and the Centers for Disease Control and Prevention (CDC). MamaOnTrack is not a substitute for professional medical advice, diagnosis, or treatment. Always consult your healthcare provider, pediatrician, or qualified medical professional with any questions or concerns regarding your health or your child&#39;s health. If you are experiencing a medical emergency, call 911 immediately.
@@ -4118,7 +3978,3 @@ tag:“Friend Finder App”,
  <p style={{ margin:0, fontSize:10, color:"#b5b0ab", textAlign:"center", letterSpacing:"0.1em", textTransform:"uppercase", fontFamily:"'Inter',sans-serif" }}>
  MamaOnTrack &#183; Built by a nurse mom, for every mom
  </p>
- </div>
- </div>
- );
-}
